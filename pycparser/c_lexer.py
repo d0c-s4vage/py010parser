@@ -104,7 +104,7 @@ class CLexer(object):
         'CONTINUE', 'DEFAULT', 'DO', 'DOUBLE', 'ELSE', 'ENUM', 'EXTERN',
         'FLOAT', 'FOR', 'GOTO', 'IF', 'INLINE', 'INT', 'LONG', 'REGISTER',
         'RESTRICT', 'RETURN', 'SHORT', 'SIGNED', 'SIZEOF', 'STATIC', 'STRUCT',
-        'SWITCH', 'TYPEDEF', 'UNION', 'UNSIGNED', 'VOID',
+        'SWITCH', 'TYPEDEF', 'UNION', 'UNSIGNED', 'VOID', 'LOCAL',
         'VOLATILE', 'WHILE',
     )
 

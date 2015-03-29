@@ -92,3 +92,10 @@ def parse_file(filename, use_cpp=False, cpp_path='cpp', cpp_args='',
         parser = CParser()
     return parser.parse(text, filename)
 
+def parse_string(text, parser=None, filename="<string>", optimize=True):
+    if parser is None:
+        parser = CParser(
+            lex_optimize=optimize,
+            yacc_optimize=optimize
+        )
+    return parser.parse(text, filename)

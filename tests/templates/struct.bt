@@ -1,0 +1,4 @@
+struct NAME {
+	int		stringLength;
+	char	name[stringLength];
+} name;

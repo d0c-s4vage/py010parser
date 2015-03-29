@@ -1,0 +1,9 @@
+struct IF_STRUCT {
+	int type;
+	
+	if(type > 10) {
+		char character;
+	} else {
+		int number;
+	}
+} if_struct;

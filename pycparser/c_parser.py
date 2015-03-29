@@ -115,7 +115,7 @@ class CParser(PLYParser):
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
 
-    def parse(self, text, filename='', debuglevel=0):
+    def parse(self, text, filename='', debuglevel=2):
         """ Parses C code and returns an AST.
 
             text:
@@ -730,6 +730,7 @@ class CParser(PLYParser):
         """ type_qualifier  : CONST
                             | RESTRICT
                             | VOLATILE
+                            | LOCAL
         """
         p[0] = p[1]
 
@@ -873,6 +874,12 @@ class CParser(PLYParser):
         p[0] = self._build_declarations(
                 spec=p[1],
                 decls=[dict(decl=p[2], init=None)])
+
+    # 010 allows block items inside of a struct
+    def p_struct_declaration_3(self, p):
+        """ struct_declaration : block_item
+        """
+        p[0] = p[1]
 
     def p_struct_declarator_list(self, p):
         """ struct_declarator_list  : struct_declarator
