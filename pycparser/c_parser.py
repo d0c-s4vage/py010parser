@@ -89,7 +89,8 @@ class CParser(PLYParser):
             'specifier_qualifier_list',
             'block_item_list',
             'type_qualifier_list',
-            'struct_declarator_list'
+            'struct_declarator_list',
+            'metadata010'
         ]
 
         for rule in rules_with_opt:
@@ -128,9 +129,11 @@ class CParser(PLYParser):
             debuglevel:
                 Debug level to yacc
         """
+        self._scope_stack = [dict()]
+        self._define_010_typedefs()
+
         self.clex.filename = filename
         self.clex.reset_lineno()
-        self._scope_stack = [dict()]
         self._last_yielded_token = None
         return self.cparser.parse(
                 input=text,
@@ -138,6 +141,82 @@ class CParser(PLYParser):
                 debug=debuglevel)
 
     ######################--   PRIVATE   --######################
+
+    def _define_010_typedefs(self):
+        # 010 key word list: http://www.sweetscape.com/010editor/manual/DataTypes.htm
+        typedefs = """
+        typedef unsigned int UINT;
+        typedef char byte;
+        typedef char CHAR;
+        typedef byte BYTE;
+        typedef unsigned char uchar;
+        typedef uchar ubyte;
+        typedef uchar UCHAR;
+        typedef ubyte UBYTE;
+        typedef short int16;
+        typedef short SHORT;
+        typedef short INT16;
+        typedef unsigned int16 uint16;
+        typedef unsigned short USHORT;
+        typedef uint16 UINT16;
+        typedef short WORD;
+        typedef int int32;
+        typedef int INT;
+        typedef int INT32;
+        typedef long LONG;
+        typedef unsigned int uint;
+        typedef uint uint32;
+        typedef unsigned long ulong;
+        typedef uint UINT;
+        typedef uint UINT32;
+        typedef ulong ULONG;
+        typedef int DWORD;
+        typedef long long int64;
+        typedef int64 quad;
+        typedef int64 QUAD;
+        typedef int64 INT64;
+        typedef int64 __int64;
+        typedef unsigned int64 uint64;
+        typedef uint64 uquad;
+        typedef uint64 UQUAD;
+        typedef uint64 UINT64;
+        typedef uint64 QWORD;
+        typedef uint64 __uint64;
+        typedef float FLOAT;
+        typedef double DOUBLE;
+        typedef float hfloat;
+        typedef hfloat HFLOAT;
+
+        typedef struct tagDOSTIME {
+            WORD second  : 5;  
+            WORD minute : 6;    
+            WORD hour    : 5;   
+        } DOSTIME;
+
+        typedef struct tagDOSDATE {
+            WORD day  : 5;  
+            WORD month : 4;    
+            WORD year    : 7;   
+        } DOSDATE;
+
+        typedef struct _FILETIME {
+          DWORD dwLowDateTime;
+          DWORD dwHighDateTime;
+        } FILETIME, *PFILETIME;
+
+        typedef uint64 OLETIME;
+        typedef long time_t;
+        """
+
+        self.clex.filename = "010_typedefs.h"
+        self.clex.reset_lineno()
+        
+        # we don't care about the output
+        self.cparser.parse(
+            input=typedefs,
+            lexer=self.clex,
+            debug=0 # don't dump debug output for the typedefs
+        )
 
     def _push_scope(self):
         self._scope_stack.append(dict())
@@ -493,7 +572,8 @@ class CParser(PLYParser):
     # Not strictly part of the C99 Grammar, but useful in practice.
     #
     def p_translation_unit_or_empty(self, p):
-        """ translation_unit_or_empty   : translation_unit
+        """ translation_unit_or_empty   : block_item_list
+                                        | translation_unit
                                         | empty
         """
         if p[1] is None:
@@ -502,7 +582,7 @@ class CParser(PLYParser):
             p[0] = c_ast.FileAST(p[1])
 
     def p_translation_unit_1(self, p):
-        """ translation_unit    : external_declaration
+        """ translation_unit    : block_item
         """
         # Note: external_declaration is already a list
         #
@@ -656,7 +736,7 @@ class CParser(PLYParser):
     # type into the table to be seen by the lexer before the next
     # line is reached.
     def p_declaration(self, p):
-        """ declaration : decl_body SEMI
+        """ declaration : decl_body metadata010_opt SEMI
         """
         p[0] = p[1]
 
@@ -1310,6 +1390,15 @@ class CParser(PLYParser):
         """
         # Empty block items (plain ';') produce [None], so ignore them
         p[0] = p[1] if (len(p) == 2 or p[2] == [None]) else p[1] + p[2]
+
+    def p_metadata010(self, p):
+        """ metadata010  : METADATA010
+        """
+        import pdb ; pdb.set_trace()
+
+        meta = c_ast.Metadata010(p[1])
+
+        p[0] = meta
 
     def p_compound_statement_1(self, p):
         """ compound_statement : brace_open block_item_list_opt brace_close """

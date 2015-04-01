@@ -171,6 +171,9 @@ class CLexer(object):
 
         # pre-processor
         'PPHASH',      # '#'
+
+		# 010-metadata
+		'METADATA010',
     )
 
     ##
@@ -180,7 +183,14 @@ class CLexer(object):
 
     # valid C identifiers (K&R2: A.2.3), plus '$' (supported by some compilers)
     identifier = r'[a-zA-Z_$][0-9a-zA-Z_$]*'
-
+    
+    # 010 metadata
+    # e.g.
+    #    int number <hidden=true>;
+    #    typedef ushort FIXEDPT <read=FIXEDPTRead, write=FIXEDPTWrite>;
+    # etc.
+    metadata010 = r'<((\w+)=([^\s]+))(,\s*((\w+)=([^\s]+)))*>'
+    
     hex_prefix = '0[xX]'
     hex_digits = '[0-9a-fA-F]+'
 
@@ -469,6 +479,20 @@ class CLexer(object):
         t.type = self.keyword_map.get(t.value, "ID")
         if t.type == 'ID' and self.type_lookup_func(t.value):
             t.type = "TYPEID"
+        return t
+
+    @TOKEN(metadata010)
+    def t_METADATA010(self, t):
+        match = re.match(self.metadata010, t.value)
+        kvs = {}
+
+        # split into groups of three
+        for full,k,v in zip(*(iter(match.groups()),) * 3):
+            if full is not None:
+                kvs[k] = v
+
+        t.keyvals = kvs
+
         return t
 
     def t_error(self, t):

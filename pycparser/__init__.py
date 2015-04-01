@@ -51,7 +51,7 @@ def preprocess_file(filename, cpp_path='cpp', cpp_args=''):
     return text
 
 
-def parse_file(filename, use_cpp=False, cpp_path='cpp', cpp_args='',
+def parse_file(filename, use_cpp=True, cpp_path='cpp', cpp_args='',
                parser=None):
     """ Parse a C file using pycparser.
 

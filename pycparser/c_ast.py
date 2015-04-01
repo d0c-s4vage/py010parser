@@ -17,6 +17,7 @@
 
 
 import sys
+import re
 
 
 class Node(object):
@@ -498,6 +499,28 @@ class ID(Node):
         return tuple(nodelist)
 
     attr_names = ('name',)
+
+class Metadata010(Node):
+    metadata010 = r'<((\w+)=([^\s]+))(,\s*((\w+)=([^\s]+)))*>'
+
+    def __init__(self, value, coord=None):
+        self.value = value
+        self.coord = coord
+
+        match = re.match(self.metadata010, value)
+        kvs = {}
+
+        # split into groups of three
+        for full,k,v in zip(*(iter(match.groups()),) * 3):
+            if full is not None:
+                kvs[k] = v
+
+        self.keyvals = kvs
+    
+    def children(self):
+        return tuple([])
+    
+    attr_names = ('keyvals')
 
 class IdentifierType(Node):
     def __init__(self, names, coord=None):
