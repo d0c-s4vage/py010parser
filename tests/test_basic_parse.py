@@ -129,12 +129,29 @@ class TestBasicParse(unittest.TestCase):
             CHAR var50;
             byte var51;
             char var52;
+
+            string var53;
+            wstring var54;
+            wchar_t var55;
         """, optimize=False)
 
     def test_block_item_at_root(self):
+        # had to get rid of the default int ret val on functions
+        # from pycparser
+
         res = parse_string("""
-        void some_function() {};
+        int a = 10;
+        void some_function(int num) {
+            some_function();
+        }
+        a++;
         some_function();
+        """, optimize=False)
+   
+    def test_pass_by_reference(self):
+        res = parse_string("""
+        void some_function(int &num) {
+        }
         """, optimize=False)
 
     def test_large_template(self):

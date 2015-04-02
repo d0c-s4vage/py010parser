@@ -105,7 +105,7 @@ class CLexer(object):
         'FLOAT', 'FOR', 'GOTO', 'IF', 'INLINE', 'INT', 'LONG', 'REGISTER',
         'RESTRICT', 'RETURN', 'SHORT', 'SIGNED', 'SIZEOF', 'STATIC', 'STRUCT',
         'SWITCH', 'TYPEDEF', 'UNION', 'UNSIGNED', 'VOID', 'LOCAL',
-        'VOLATILE', 'WHILE',
+        'VOLATILE', 'WHILE', 'STRING', 'WSTRING'
     )
 
     keyword_map = {}

@@ -90,7 +90,7 @@ class CParser(PLYParser):
             'block_item_list',
             'type_qualifier_list',
             'struct_declarator_list',
-            'metadata010'
+            'metadata010',
         ]
 
         for rule in rules_with_opt:
@@ -98,7 +98,7 @@ class CParser(PLYParser):
 
         self.cparser = yacc.yacc(
             module=self,
-            start='translation_unit_or_empty',
+            start='external_block_item_list_or_empty',
             debug=yacc_debug,
             optimize=yacc_optimize,
             tabmodule=yacctab)
@@ -157,7 +157,9 @@ class CParser(PLYParser):
         typedef short SHORT;
         typedef short INT16;
         typedef unsigned int16 uint16;
-        typedef unsigned short USHORT;
+        typedef unsigned short ushort;
+        typedef ushort wchar_t;
+        typedef ushort USHORT;
         typedef uint16 UINT16;
         typedef short WORD;
         typedef int int32;
@@ -568,32 +570,28 @@ class CParser(PLYParser):
     ## Implementation of the BNF defined in K&R2 A.13
     ##
 
-    # Wrapper around a translation unit, to allow for empty input.
-    # Not strictly part of the C99 Grammar, but useful in practice.
-    #
-    def p_translation_unit_or_empty(self, p):
-        """ translation_unit_or_empty   : block_item_list
-                                        | translation_unit
-                                        | empty
+    def p_external_block_item_list_or_empty(self, p):
+        """ external_block_item_list_or_empty   : external_block_item_list
+                                                | empty
         """
         if p[1] is None:
             p[0] = c_ast.FileAST([])
         else:
             p[0] = c_ast.FileAST(p[1])
 
-    def p_translation_unit_1(self, p):
-        """ translation_unit    : block_item
+    def p_external_block_item_list(self, p):
+        """ external_block_item_list    : external_block_item
+                                        | external_block_item_list external_block_item
         """
-        # Note: external_declaration is already a list
-        #
-        p[0] = p[1]
+        # Empty external block items (plain ';') produce [None], so ignore them
+        p[0] = p[1] if (len(p) == 2 or p[2] == [None]) else p[1] + p[2]
 
-    def p_translation_unit_2(self, p):
-        """ translation_unit    : translation_unit external_declaration
+    def p_external_block_item(self, p):
+        """ external_block_item : statement
+                                | declaration
+                                | external_declaration
         """
-        if p[2] is not None:
-            p[1].extend(p[2])
-        p[0] = p[1]
+        p[0] = p[1] if isinstance(p[1], list) else [p[1]]
 
     # Declarations always come as lists (because they can be
     # several in one line), so we wrap the function definition
@@ -626,27 +624,7 @@ class CParser(PLYParser):
         self._parse_error('Directives not supported yet',
             self._coord(p.lineno(1)))
 
-    # In function definitions, the declarator can be followed by
-    # a declaration list, for old "K&R style" function definitios.
-    #
-    def p_function_definition_1(self, p):
-        """ function_definition : declarator declaration_list_opt compound_statement
-        """
-        # no declaration specifiers - 'int' becomes the default type
-        spec = dict(
-            qual=[],
-            storage=[],
-            type=[c_ast.IdentifierType(['int'],
-                                       coord=self._coord(p.lineno(1)))],
-            function=[])
-
-        p[0] = self._build_function_definition(
-            spec=spec,
-            decl=p[1],
-            param_decls=p[2],
-            body=p[3])
-
-    def p_function_definition_2(self, p):
+    def p_function_definition(self, p):
         """ function_definition : declaration_specifiers declarator declaration_list_opt compound_statement
         """
         spec = p[1]
@@ -793,6 +771,8 @@ class CParser(PLYParser):
                             | LONG
                             | FLOAT
                             | DOUBLE
+                            | STRING
+                            | WSTRING
                             | _COMPLEX
                             | SIGNED
                             | UNSIGNED
@@ -1040,11 +1020,16 @@ class CParser(PLYParser):
         """
         p[0] = self._type_modify_decl(p[2], p[1])
 
+    def p_declarator_3(self, p):
+        """ declarator  : byref direct_declarator
+        """
+        p[0] = self._type_modify_decl(p[2], p[1])
+
     # Since it's impossible for a type to be specified after a pointer, assume
     # it's intended to be the name for this declaration.  _add_identifier will
     # raise an error if this TYPEID can't be redeclared.
     #
-    def p_declarator_3(self, p):
+    def p_declarator_4(self, p):
         """ declarator  : pointer TYPEID
         """
         decl = c_ast.TypeDecl(
@@ -1153,6 +1138,16 @@ class CParser(PLYParser):
             type=p[3] if len(p) > 3 else None,
             coord=coord)
 
+    def p_byref(self, p):
+        """ byref : AND type_qualifier_list_opt
+        """
+        coord = self._coord(p.lineno(1))
+
+        p[0] = c_ast.ByRefDecl(
+            quals=p[2] or [],
+            type=p[3] if len(p) > 3 else None,
+            coord=coord)
+
     def p_type_qualifier_list(self, p):
         """ type_qualifier_list : type_qualifier
                                 | type_qualifier_list type_qualifier
@@ -1178,6 +1173,7 @@ class CParser(PLYParser):
             p[1].params.append(p[3])
             p[0] = p[1]
 
+    # 010 allows passing variables by reference (e.g. void function(int &b) { })
     def p_parameter_declaration_1(self, p):
         """ parameter_declaration   : declaration_specifiers declarator
         """
@@ -1394,8 +1390,6 @@ class CParser(PLYParser):
     def p_metadata010(self, p):
         """ metadata010  : METADATA010
         """
-        import pdb ; pdb.set_trace()
-
         meta = c_ast.Metadata010(p[1])
 
         p[0] = meta

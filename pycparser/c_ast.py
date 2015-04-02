@@ -616,6 +616,19 @@ class PtrDecl(Node):
 
     attr_names = ('quals',)
 
+class ByRefDecl(Node):
+    def __init__(self, quals, type, coord=None):
+        self.quals = quals
+        self.type = type
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        if self.type is not None: nodelist.append(("type", self.type))
+        return tuple(nodelist)
+
+    attr_names = ('quals',)
+
 class Return(Node):
     def __init__(self, expr, coord=None):
         self.expr = expr
