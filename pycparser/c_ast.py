@@ -282,6 +282,7 @@ class Decl(Node):
         self.init = init
         self.bitsize = bitsize
         self.coord = coord
+        self.metadata = None
 
     def children(self):
         nodelist = []
@@ -351,10 +352,11 @@ class EmptyStatement(Node):
     attr_names = ()
 
 class Enum(Node):
-    def __init__(self, name, values, coord=None):
+    def __init__(self, name, values, coord=None, enum_type=None):
         self.name = name
         self.values = values
         self.coord = coord
+        self.type = enum_type
 
     def children(self):
         nodelist = []
@@ -721,6 +723,7 @@ class Typedef(Node):
         self.storage = storage
         self.type = type
         self.coord = coord
+        self.metadata = None
 
     def children(self):
         nodelist = []

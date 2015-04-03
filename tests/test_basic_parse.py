@@ -38,6 +38,42 @@ class TestBasicParse(unittest.TestCase):
                 }
             } blah;
             """, optimize=False)
+
+    def test_declaration_in_struct(self):
+        res = parse_string("""
+            int c;
+            switch(c) {
+                case 1:
+                    c++;
+                case 2:
+                    int c;
+            }
+        """, optimize=False)
+
+    def test_declaration_in_if(self):
+        res = parse_string("""
+            if(1) {
+                int c;
+            } else {
+                int b;
+            }
+        """, optimize=False)
+
+    def test_switch_in_struct(self):
+        res = parse_string("""
+            struct BLAH {
+                int c;
+
+                switch(c) {
+                    case 1:
+                        int aa;
+                    case 2:
+                        int bb;
+                    default:
+                        int cc;
+                }
+            } blah;
+            """, optimize=False)
     
     def test_nested_structs(self):
         res = parse_string("""
@@ -152,6 +188,55 @@ class TestBasicParse(unittest.TestCase):
         res = parse_string("""
         void some_function(int &num) {
         }
+        """, optimize=False)
+    
+    def test_enum_types(self):
+        # note that there have been problems using a built-in
+        # type (int/float/etc) vs the typedefd ones, TYPEID vs 
+        res = parse_string("""
+        enum <ulong> COLORS {
+            WHITE = 1
+        } var1;
+
+        enum <int> COLORS {
+            WHITE = 1
+        } var1;
+
+        enum IFD_dirtype {
+            IFD_TYPE_EXIF = 1,
+            IFD_TYPE_GEOTAG,
+            IFD_TYPE_CASIO_QV_R62,
+        };
+
+        enum {
+            TEST,
+            TEST2
+        } blah;
+        """, optimize=False)
+
+    def test_struct_bitfield_with_metadata(self):
+        res = parse_string("""
+            typedef struct tgCifDirEntry {
+                    uint16 storage_method : 2;
+                    uint16 data_type : 3;
+                    uint16 id_code : 11 <format=hex>;
+            } CifDirEntry <read=ReadCifDirEntry>;
+        """, optimize=False)
+
+    def test_untypedefd_enum_as_typeid(self):
+        res = parse_string("""
+            enum <ulong> BLAH {
+                BLAH1, BLAH2, BLAH3
+            };
+            local BLAH x;
+        """, optimize=False)
+
+    def test_initializer_in_struct(self):
+        res = parse_string("""
+            local int b = 11;
+            typedef struct BLAH {
+                local int a = 10;
+            } blah;
         """, optimize=False)
 
     def test_large_template(self):

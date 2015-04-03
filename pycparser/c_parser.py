@@ -91,6 +91,7 @@ class CParser(PLYParser):
             'type_qualifier_list',
             'struct_declarator_list',
             'metadata010',
+            'enum_type'
         ]
 
         for rule in rules_with_opt:
@@ -435,7 +436,7 @@ class CParser(PLYParser):
         spec[kind].insert(0, newspec)
         return spec
 
-    def _build_declarations(self, spec, decls, typedef_namespace=False):
+    def _build_declarations(self, spec, decls, typedef_namespace=False, metadata=None):
         """ Builds a list of declarations all sharing the given specifiers.
             If typedef_namespace is true, each declared name is added
             to the "typedef namespace", which also includes objects,
@@ -521,6 +522,9 @@ class CParser(PLYParser):
                     self._add_identifier(fixed_decl.name, fixed_decl.coord)
 
             declarations.append(fixed_decl)
+
+        for declaration in declarations:
+            declaration.metadata = metadata
 
         return declarations
 
@@ -716,6 +720,11 @@ class CParser(PLYParser):
     def p_declaration(self, p):
         """ declaration : decl_body metadata010_opt SEMI
         """
+        metadata = p[2]
+        if type(p[1]) is list:
+            for decl in p[1]:
+                decl.metadata = metadata
+
         p[0] = p[1]
 
     # Since each declaration is a list of declarations, this
@@ -884,15 +893,18 @@ class CParser(PLYParser):
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_struct_declaration_1(self, p):
-        """ struct_declaration : specifier_qualifier_list struct_declarator_list_opt SEMI
+        """ struct_declaration : specifier_qualifier_list struct_declarator_list_opt metadata010_opt SEMI
         """
         spec = p[1]
         assert 'typedef' not in spec['storage']
 
+        metadata = p[3]
+
         if p[2] is not None:
             decls = self._build_declarations(
                 spec=spec,
-                decls=p[2])
+                decls=p[2],
+                metadata=metadata)
 
         elif len(spec['type']) == 1:
             # Anonymous struct/union, gcc extension, C1x feature.
@@ -970,16 +982,42 @@ class CParser(PLYParser):
         """
         p[0] = c_ast.Enum(p[2], None, self._coord(p.lineno(1)))
 
+    # see http://www.sweetscape.com/010editor/manual/DataTypes.htm
+    # e.g. enum <ushort> COLORS { GRAY = 1, WHITE = 2, BLACK = 3 } var1;
     def p_enum_specifier_2(self, p):
-        """ enum_specifier  : ENUM brace_open enumerator_list brace_close
+        """ enum_specifier  : ENUM enum_type_opt brace_open enumerator_list brace_close
         """
-        p[0] = c_ast.Enum(None, p[3], self._coord(p.lineno(1)))
+        p[0] = c_ast.Enum(None, p[4], self._coord(p.lineno(1)), p[2])
 
+    # using enum_type_opt isn't working... not sure why
+    # for now just explicitly listing the options with and
+    # without enum_type
     def p_enum_specifier_3(self, p):
-        """ enum_specifier  : ENUM ID brace_open enumerator_list brace_close
+        """ enum_specifier  : ENUM enum_type ID brace_open enumerator_list brace_close
+                            | ENUM enum_type TYPEID brace_open enumerator_list brace_close
                             | ENUM TYPEID brace_open enumerator_list brace_close
+                            | ENUM ID brace_open enumerator_list brace_close
         """
-        p[0] = c_ast.Enum(p[2], p[4], self._coord(p.lineno(1)))
+        # no enum_type
+        if len(p) == 6:
+            p[0] = c_ast.Enum(p[2], p[4], self._coord(p.lineno(1)), None)
+
+        # with enum_type
+        else:
+            p[0] = c_ast.Enum(p[3], p[5], self._coord(p.lineno(1)), p[2])
+
+        # 010 behavior - treats enums like a typedef
+        # e.g.
+        #   enum <int> SOME_ENUM { A, B, C };
+        #   local SOME_ENUM a;
+        #
+        self._add_typedef_name(p[0].name, self._coord((p.lineno(1))))
+
+    def p_enum_type(self, p):
+        """ enum_type   : LT type_specifier GT
+                        | LT TYPEID GT
+        """
+        p[0] = p[2]
 
     def p_enumerator_list(self, p):
         """ enumerator_list : enumerator
@@ -1405,11 +1443,11 @@ class CParser(PLYParser):
         p[0] = c_ast.Label(p[1], p[3], self._coord(p.lineno(1)))
 
     def p_labeled_statement_2(self, p):
-        """ labeled_statement : CASE constant_expression COLON statement """
+        """ labeled_statement : CASE constant_expression COLON block_item """
         p[0] = c_ast.Case(p[2], [p[4]], self._coord(p.lineno(1)))
 
     def p_labeled_statement_3(self, p):
-        """ labeled_statement : DEFAULT COLON statement """
+        """ labeled_statement : DEFAULT COLON block_item """
         p[0] = c_ast.Default([p[3]], self._coord(p.lineno(1)))
 
     def p_selection_statement_1(self, p):
