@@ -236,6 +236,20 @@ class TestBasicParse(unittest.TestCase):
             local int b = 11;
             typedef struct BLAH {
                 local int a = 10;
+                int a:10;
+            } blah;
+        """, optimize=False)
+
+    def test_nested_bitfield_in_struct(self):
+        res = parse_string("""
+            typedef struct BLAH {
+                int a;
+                switch(a) {
+                    case 10:
+                        int b:10;
+                    default:
+                        int c:10;
+                }
             } blah;
         """, optimize=False)
 

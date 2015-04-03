@@ -117,7 +117,7 @@ class CParser(PLYParser):
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
 
-    def parse(self, text, filename='', debuglevel=2):
+    def parse(self, text, filename='', debuglevel=2, predefine_types=True):
         """ Parses C code and returns an AST.
 
             text:
@@ -131,7 +131,8 @@ class CParser(PLYParser):
                 Debug level to yacc
         """
         self._scope_stack = [dict()]
-        self._define_010_typedefs()
+        if predefine_types:
+            self._define_010_typedefs()
 
         self.clex.filename = filename
         self.clex.reset_lineno()
@@ -860,7 +861,7 @@ class CParser(PLYParser):
             coord=self._coord(p.lineno(2)))
 
     def p_struct_or_union_specifier_2(self, p):
-        """ struct_or_union_specifier : struct_or_union brace_open struct_declaration_list brace_close
+        """ struct_or_union_specifier : struct_or_union brace_open struct_item_list brace_close
         """
         klass = self._select_struct_union_class(p[1])
         p[0] = klass(
@@ -869,8 +870,8 @@ class CParser(PLYParser):
             coord=self._coord(p.lineno(2)))
 
     def p_struct_or_union_specifier_3(self, p):
-        """ struct_or_union_specifier   : struct_or_union ID brace_open struct_declaration_list brace_close
-                                        | struct_or_union TYPEID brace_open struct_declaration_list brace_close
+        """ struct_or_union_specifier   : struct_or_union ID brace_open struct_item_list brace_close
+                                        | struct_or_union TYPEID brace_open struct_item_list brace_close
         """
         klass = self._select_struct_union_class(p[1])
         p[0] = klass(
@@ -886,11 +887,17 @@ class CParser(PLYParser):
 
     # Combine all declarations into a single list
     #
-    def p_struct_declaration_list(self, p):
-        """ struct_declaration_list     : struct_declaration
-                                        | struct_declaration_list struct_declaration
+    def p_struct_item_list(self, p):
+        """ struct_item_list     : struct_item
+                                 | struct_item_list struct_item
         """
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+
+    def p_struct_item(self, p):
+        """ struct_item    : block_item
+                           | struct_declaration
+        """
+        p[0] = p[1]
 
     def p_struct_declaration_1(self, p):
         """ struct_declaration : specifier_qualifier_list struct_declarator_list_opt metadata010_opt SEMI
@@ -962,12 +969,18 @@ class CParser(PLYParser):
     # struct_declarator passes up a dict with the keys: decl (for
     # the underlying declarator) and bitsize (for the bitsize)
     #
+    # had to add the init_declarator here, simply adding block_item
+    # into struct_item doesn't cut it
     def p_struct_declarator_1(self, p):
         """ struct_declarator : declarator
+                              | init_declarator
         """
-        p[0] = {'decl': p[1], 'bitsize': None}
+        if type(p[1]) is dict:
+            p[0] = p[1]
+        else:
+            p[0] = {'decl': p[1], 'bitsize': None}
 
-    def p_struct_declarator_2(self, p):
+    def p_struct_declarator_3(self, p):
         """ struct_declarator   : declarator COLON constant_expression
                                 | COLON constant_expression
         """

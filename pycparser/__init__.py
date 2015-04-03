@@ -52,7 +52,7 @@ def preprocess_file(filename, cpp_path='cpp', cpp_args=''):
 
 
 def parse_file(filename, use_cpp=True, cpp_path='cpp', cpp_args='',
-               parser=None):
+               parser=None, predefine_types=True):
     """ Parse a C file using pycparser.
 
         filename:
@@ -90,12 +90,12 @@ def parse_file(filename, use_cpp=True, cpp_path='cpp', cpp_args='',
 
     if parser is None:
         parser = CParser()
-    return parser.parse(text, filename)
+    return parser.parse(text, filename, predefine_types=predefine_types)
 
-def parse_string(text, parser=None, filename="<string>", optimize=True):
+def parse_string(text, parser=None, filename="<string>", optimize=True, predefine_types=True):
     if parser is None:
         parser = CParser(
             lex_optimize=optimize,
             yacc_optimize=optimize
         )
-    return parser.parse(text, filename)
+    return parser.parse(text, filename, predefine_types=predefine_types)
