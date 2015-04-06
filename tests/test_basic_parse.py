@@ -16,9 +16,15 @@ class TestBasicParse(unittest.TestCase):
 
     def tearDown(self):
         pass
+    
+    def test_basic_struct(self):
+        res = parse_string("""
+            struct NAME {
+                int blah;
+            } name;
+        """, optimize=False, predefine_types=False)
 
     def test_basic(self):
-        return
         res = parse_string("""
             struct NAME {
                     int		stringLength;
@@ -251,6 +257,62 @@ class TestBasicParse(unittest.TestCase):
                         int c:10;
                 }
             } blah;
+        """, optimize=False)
+    
+    def test_single_decl_in_for_loop(self):
+        res = parse_string("""
+            for(j = 0; j < 10; j++)
+                ushort blah;
+        """, optimize=False)
+
+    def test_single_decl_in_while_loop(self):
+        res = parse_string("""
+            while(1)
+                ushort blah;
+        """, optimize=False)
+
+    def test_single_decl_in_do_while_loop(self):
+        res = parse_string("""
+            while(1)
+                ushort blah;
+        """, optimize=False)
+
+    def test_single_decl_in_do_while_loop(self):
+        res = parse_string("""
+            do
+                ushort blah;
+            while(1);
+        """, optimize=False)
+
+    def test_single_decl_in_if(self):
+        res = parse_string("""
+            if(1)
+                ushort blah;
+        """, optimize=False)
+
+    def test_single_decl_in_if_else(self):
+        res = parse_string("""
+            if(1)
+                ushort blah;
+            else
+                ushort blah;
+
+            if(1) {
+                ushort blah;
+            } else
+                ushort blah;
+
+            if(1)
+                ushort blah;
+            else {
+                ushort blah;
+            }
+
+            if(1) {
+                ushort blah;
+            } else {
+                ushort blah;
+            }
         """, optimize=False)
 
     def test_large_template(self):

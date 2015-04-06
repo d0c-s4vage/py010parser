@@ -117,6 +117,21 @@ class CParser(PLYParser):
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
 
+        # Since 010 allows statements inside of a struct,
+        # I can't think of an easy way besides duplicating an
+        # entire set of rules to ensure that bitfields only
+        # occur _inside_ of a struct.
+        #
+        # So we'll increment and decrement the struct level
+        # when a struct definition is begun and ended.
+        # See how struct_or_union_specifier_3 and
+        # struct_or_union_as_declaration handle this.
+        # 
+        # Also note the check for _struct_level in the bitfield rule
+        # (struct_declarator_2 and decl_body_2). Struct declarators are added to
+        # block_item
+        self._struct_level = 0
+
     def parse(self, text, filename='', debuglevel=2, predefine_types=True):
         """ Parses C code and returns an AST.
 
@@ -659,7 +674,7 @@ class CParser(PLYParser):
     # This rule splits its declarations and always returns a list
     # of Decl nodes, even if it's one element long.
     #
-    def p_decl_body(self, p):
+    def p_decl_body_1(self, p):
         """ decl_body : declaration_specifiers init_declarator_list_opt
         """
         spec = p[1]
@@ -702,6 +717,19 @@ class CParser(PLYParser):
                 typedef_namespace=True)
 
         p[0] = decls
+
+    # have to basically redefine struct_declarator_2 to get this to
+    # work
+    def p_decl_body_2(self, p):
+        """ decl_body : declaration_specifiers declarator COLON constant_expression
+        """
+        if self._struct_level == 0:
+            raise ParseError("bitfields may only be used inside of structs")
+
+        if len(p) > 3:
+            p[0] = {'decl': p[1], 'bitsize': p[3]}
+        else:
+            p[0] = {'decl': c_ast.TypeDecl(None, None, None), 'bitsize': p[2]}
 
     # The declaration has been split to a decl_body sub-rule and
     # SEMI, because having them in a single rule created a problem
@@ -859,6 +887,7 @@ class CParser(PLYParser):
             name=p[2],
             decls=None,
             coord=self._coord(p.lineno(2)))
+        self._struct_level -= 1
 
     def p_struct_or_union_specifier_2(self, p):
         """ struct_or_union_specifier : struct_or_union brace_open struct_item_list brace_close
@@ -868,6 +897,7 @@ class CParser(PLYParser):
             name=None,
             decls=p[3],
             coord=self._coord(p.lineno(2)))
+        self._struct_level -= 1
 
     def p_struct_or_union_specifier_3(self, p):
         """ struct_or_union_specifier   : struct_or_union ID brace_open struct_item_list brace_close
@@ -878,11 +908,13 @@ class CParser(PLYParser):
             name=p[2],
             decls=p[4],
             coord=self._coord(p.lineno(2)))
+        self._struct_level -= 1
 
     def p_struct_or_union(self, p):
         """ struct_or_union : STRUCT
                             | UNION
         """
+        self._struct_level += 1
         p[0] = p[1]
 
     # Combine all declarations into a single list
@@ -980,10 +1012,15 @@ class CParser(PLYParser):
         else:
             p[0] = {'decl': p[1], 'bitsize': None}
 
-    def p_struct_declarator_3(self, p):
-        """ struct_declarator   : declarator COLON constant_expression
-                                | COLON constant_expression
+    def p_struct_declarator_2(self, p):
+        """ struct_declarator : declarator COLON constant_expression
+                              | COLON constant_expression
         """
+        # means the current statement is not contained in a struct
+        # definition
+        if self._struct_level == 0:
+            raise ParseError("bitfields may only be used inside of structs")
+
         if len(p) > 3:
             p[0] = {'decl': p[1], 'bitsize': p[3]}
         else:
@@ -1071,8 +1108,11 @@ class CParser(PLYParser):
         """
         p[0] = self._type_modify_decl(p[2], p[1])
 
+    # function-specific, but this is making it available to
+    # all declarator rules...
+    # TODO fix this and make it function specific
     def p_declarator_3(self, p):
-        """ declarator  : byref direct_declarator
+        """ declarator : byref direct_declarator
         """
         p[0] = self._type_modify_decl(p[2], p[1])
 
@@ -1463,12 +1503,18 @@ class CParser(PLYParser):
         """ labeled_statement : DEFAULT COLON block_item """
         p[0] = c_ast.Default([p[3]], self._coord(p.lineno(1)))
 
+    # see iteration_statement_3 for a reasoning behind the declaration option
     def p_selection_statement_1(self, p):
-        """ selection_statement : IF LPAREN expression RPAREN statement """
+        """ selection_statement : IF LPAREN expression RPAREN statement
+                                | IF LPAREN expression RPAREN declaration """
         p[0] = c_ast.If(p[3], p[5], None, self._coord(p.lineno(1)))
 
     def p_selection_statement_2(self, p):
-        """ selection_statement : IF LPAREN expression RPAREN statement ELSE statement """
+        """ selection_statement : IF LPAREN expression RPAREN statement ELSE statement
+                                | IF LPAREN expression RPAREN statement ELSE declaration
+                                | IF LPAREN expression RPAREN declaration ELSE statement
+                                | IF LPAREN expression RPAREN declaration ELSE declaration
+        """
         p[0] = c_ast.If(p[3], p[5], p[7], self._coord(p.lineno(1)))
 
     def p_selection_statement_3(self, p):
@@ -1476,20 +1522,33 @@ class CParser(PLYParser):
         p[0] = fix_switch_cases(
                 c_ast.Switch(p[3], p[5], self._coord(p.lineno(1))))
 
+    # see iteration_statement_3 for a reasoning behind the declaration option
     def p_iteration_statement_1(self, p):
-        """ iteration_statement : WHILE LPAREN expression RPAREN statement """
+        """ iteration_statement : WHILE LPAREN expression RPAREN statement
+                                | WHILE LPAREN expression RPAREN declaration """
         p[0] = c_ast.While(p[3], p[5], self._coord(p.lineno(1)))
 
+    # see iteration_statement_3 for a reasoning behind the declaration option
     def p_iteration_statement_2(self, p):
-        """ iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMI """
+        """ iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMI
+                                | DO declaration WHILE LPAREN expression RPAREN SEMI """
         p[0] = c_ast.DoWhile(p[5], p[2], self._coord(p.lineno(1)))
 
+    # the declaration option is needed to allow the case below:
+    #     for(j = 0; j < 10; j++)
+    #          ushort blah;
+    # a single declaration. The normal "statement" will not work in this case since it
+    # cannotn resolve to a compound statement and then a block_item
     def p_iteration_statement_3(self, p):
-        """ iteration_statement : FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement """
+        """ iteration_statement : FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement
+                                | FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN declaration
+        """
         p[0] = c_ast.For(p[3], p[5], p[7], p[9], self._coord(p.lineno(1)))
 
+    # see iteration_statement_3 for a reasoning behind the declaration option
     def p_iteration_statement_4(self, p):
-        """ iteration_statement : FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN statement """
+        """ iteration_statement : FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN statement
+                                | FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN declaration """
         p[0] = c_ast.For(c_ast.DeclList(p[3], self._coord(p.lineno(1))),
                          p[4], p[6], p[8], self._coord(p.lineno(1)))
 
