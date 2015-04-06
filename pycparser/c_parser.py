@@ -908,6 +908,14 @@ class CParser(PLYParser):
             name=p[2],
             decls=p[4],
             coord=self._coord(p.lineno(2)))
+
+        # 010 behavior - treats structs like they all have typedefs
+        # e.g.
+        #   struct Blah { int a; } blah_t;
+        #   blah_t b;
+        #
+        self._add_typedef_name(p[2], self._coord((p.lineno(1))))
+
         self._struct_level -= 1
 
     def p_struct_or_union(self, p):
@@ -1056,7 +1064,7 @@ class CParser(PLYParser):
         else:
             p[0] = c_ast.Enum(p[3], p[5], self._coord(p.lineno(1)), p[2])
 
-        # 010 behavior - treats enums like a typedef
+        # 010 behavior - treats enums like they all have typedefs
         # e.g.
         #   enum <int> SOME_ENUM { A, B, C };
         #   local SOME_ENUM a;
@@ -1065,7 +1073,6 @@ class CParser(PLYParser):
 
     def p_enum_type(self, p):
         """ enum_type   : LT type_specifier GT
-                        | LT TYPEID GT
         """
         p[0] = p[2]
 

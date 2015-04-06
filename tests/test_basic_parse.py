@@ -192,7 +192,10 @@ class TestBasicParse(unittest.TestCase):
    
     def test_pass_by_reference(self):
         res = parse_string("""
-        void some_function(int &num) {
+        void some_function(int &num, int &num2) {
+        }
+
+        void some_function(int &num2) {
         }
         """, optimize=False)
     
@@ -314,6 +317,23 @@ class TestBasicParse(unittest.TestCase):
                 ushort blah;
             }
         """, optimize=False)
+
+    def test_implicit_struct_typedef(self):
+        res = parse_string("""
+            struct Blah { int a; } blah;
+
+            Blah b;
+        """, optimize=False)
+    
+    # I think we'll make a break from 010 syntax here...
+    # it's too ridiculous to me to allow types that have
+    # not yet been defined
+    #def test_runtime_declared_type(self):
+        #res = parse_string("""
+            #void ReadAscString1(StrAscii1 &s) {
+                #;
+            #}
+        #""", optimize=False, predefine_types=False)
 
     def test_large_template(self):
         res = parse_file(template_path("JPGTemplate.bt"))
