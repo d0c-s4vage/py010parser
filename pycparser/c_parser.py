@@ -1313,6 +1313,19 @@ class CParser(PLYParser):
 
         p[0] = decl
 
+    # This exists to deal with how 010 allows undefined types
+    # to be used in function parameters
+    def p_parameter_declaration_3(self, p):
+        """ parameter_declaration   : identifier declarator
+        """
+        id_ = p[1]
+        spec = self._add_declaration_specifier(None, id_, "type")
+        decl = self._build_declarations(
+            spec=spec,
+            decls=[dict(decl=p[2], init=None)])[0]
+
+        p[0] = decl
+
     def p_identifier_list(self, p):
         """ identifier_list : identifier
                             | identifier_list COMMA identifier

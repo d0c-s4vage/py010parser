@@ -503,7 +503,7 @@ class ID(Node):
     attr_names = ('name',)
 
 class Metadata010(Node):
-    metadata010 = r'<((\w+)=([^\s]+))(,\s*((\w+)=([^\s]+)))*>'
+    metadata010 = r'<((\w+)=(.*?))(,\s*(\w+)=(.*))*>'
 
     def __init__(self, value, coord=None):
         self.value = value

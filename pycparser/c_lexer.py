@@ -189,7 +189,8 @@ class CLexer(object):
     #    int number <hidden=true>;
     #    typedef ushort FIXEDPT <read=FIXEDPTRead, write=FIXEDPTWrite>;
     # etc.
-    metadata010 = r'<((\w+)=([^\s]+))(,\s*((\w+)=([^\s]+)))*>'
+    #metadata010 = r'<((\w+)=([^\s]+))(,\s*((\w+)=([^\s]+)))*>'
+    metadata010 = r'<((\w+)=(.*?))(,\s*(\w+)=(.*))*>'
     
     hex_prefix = '0[xX]'
     hex_digits = '[0-9a-fA-F]+'
@@ -486,12 +487,12 @@ class CLexer(object):
         match = re.match(self.metadata010, t.value)
         kvs = {}
 
-        # split into groups of three
-        for full,k,v in zip(*(iter(match.groups()),) * 3):
-            if full is not None:
-                kvs[k] = v
-
-        t.keyvals = kvs
+     	# split into groups of three
+        #for full,k,v in zip(*(iter(match.groups()),) * 3):
+            #if full is not None:
+                #kvs[k] = v
+#
+        #t.keyvals = kvs
 
         return t
 

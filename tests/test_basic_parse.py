@@ -328,12 +328,18 @@ class TestBasicParse(unittest.TestCase):
     # I think we'll make a break from 010 syntax here...
     # it's too ridiculous to me to allow types that have
     # not yet been defined
-    #def test_runtime_declared_type(self):
-        #res = parse_string("""
-            #void ReadAscString1(StrAscii1 &s) {
-                #;
-            #}
-        #""", optimize=False, predefine_types=False)
+    def test_runtime_declared_type(self):
+        res = parse_string("""
+            void ReadAscString1(StrAscii1 &s) {
+                ;
+            }
+        """, optimize=False, predefine_types=False)
+    
+    def test_metadata_with_string_value(self):
+        res = parse_string("""
+            int a <comment="this is a comment", key=val>;
+            int a <comment="this is a comment">;
+        """, optimize=False)
 
     def test_large_template(self):
         res = parse_file(template_path("JPGTemplate.bt"))
