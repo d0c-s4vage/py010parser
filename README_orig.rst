@@ -2,7 +2,9 @@
 pycparser v2.10
 ===============
 
-:Author: `Eli Bendersky <http://eli.thegreenplace.net>`_
+:Author: `James Johnson @d0c_s4vage`_
+
+Original pycparser project created by `Eli Bendersky <http://eli.thegreenplace.net>`_
 
 
 .. contents::
