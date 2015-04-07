@@ -5,7 +5,7 @@ import sys
 import unittest
 
 sys.path.insert(0, "..")
-from pycparser import parse_file, parse_string, c_ast
+from py010parser import parse_file, parse_string, c_ast
 
 def template_path(template_name):
     return os.path.join("templates", template_name)
@@ -22,7 +22,7 @@ class TestBasicParse(unittest.TestCase):
             struct NAME {
                 int blah;
             } name;
-        """, optimize=False, predefine_types=False)
+        """, optimize=True, predefine_types=False)
 
     def test_basic(self):
         res = parse_string("""
@@ -30,7 +30,7 @@ class TestBasicParse(unittest.TestCase):
                     int		stringLength;
                     char	name[stringLength];
             } name;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_if_in_struct(self):
         res = parse_string("""
@@ -43,7 +43,7 @@ class TestBasicParse(unittest.TestCase):
                     b = 10;
                 }
             } blah;
-            """, optimize=False)
+            """, optimize=True)
 
     def test_declaration_in_struct(self):
         res = parse_string("""
@@ -54,7 +54,7 @@ class TestBasicParse(unittest.TestCase):
                 case 2:
                     int c;
             }
-        """, optimize=False)
+        """, optimize=True)
 
     def test_declaration_in_if(self):
         res = parse_string("""
@@ -63,7 +63,7 @@ class TestBasicParse(unittest.TestCase):
             } else {
                 int b;
             }
-        """, optimize=False)
+        """, optimize=True)
 
     def test_switch_in_struct(self):
         res = parse_string("""
@@ -79,7 +79,7 @@ class TestBasicParse(unittest.TestCase):
                         int cc;
                 }
             } blah;
-            """, optimize=False)
+            """, optimize=True)
     
     def test_nested_structs(self):
         res = parse_string("""
@@ -97,25 +97,25 @@ class TestBasicParse(unittest.TestCase):
                     } record[ header.numRecords ];
 
                 } file;
-        """, optimize=False)
+        """, optimize=True)
     
     # http://www.sweetscape.com/010editor/manual/TemplateVariables.htm
     def test_local_keyword(self):
         res = parse_string("""
             local int a;
             local int b;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_metadata(self):
         res = parse_string("""
             local int a <hidden=true>;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_typedef(self):
         res = parse_string("""
             typedef unsigned int UINT2;
             UINT2 blah;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_value_types(self):
         res = parse_string("""
@@ -175,7 +175,7 @@ class TestBasicParse(unittest.TestCase):
             string var53;
             wstring var54;
             wchar_t var55;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_block_item_at_root(self):
         # had to get rid of the default int ret val on functions
@@ -188,7 +188,7 @@ class TestBasicParse(unittest.TestCase):
         }
         a++;
         some_function();
-        """, optimize=False)
+        """, optimize=True)
    
     def test_pass_by_reference(self):
         res = parse_string("""
@@ -197,7 +197,7 @@ class TestBasicParse(unittest.TestCase):
 
         void some_function(int &num2) {
         }
-        """, optimize=False)
+        """, optimize=True)
     
     def test_enum_types(self):
         # note that there have been problems using a built-in
@@ -221,7 +221,7 @@ class TestBasicParse(unittest.TestCase):
             TEST,
             TEST2
         } blah;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_struct_bitfield_with_metadata(self):
         res = parse_string("""
@@ -230,7 +230,7 @@ class TestBasicParse(unittest.TestCase):
                     uint16 data_type : 3;
                     uint16 id_code : 11 <format=hex>;
             } CifDirEntry <read=ReadCifDirEntry>;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_untypedefd_enum_as_typeid(self):
         res = parse_string("""
@@ -238,7 +238,7 @@ class TestBasicParse(unittest.TestCase):
                 BLAH1, BLAH2, BLAH3
             };
             local BLAH x;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_initializer_in_struct(self):
         res = parse_string("""
@@ -247,7 +247,7 @@ class TestBasicParse(unittest.TestCase):
                 local int a = 10;
                 int a:10;
             } blah;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_nested_bitfield_in_struct(self):
         res = parse_string("""
@@ -260,38 +260,38 @@ class TestBasicParse(unittest.TestCase):
                         int c:10;
                 }
             } blah;
-        """, optimize=False)
+        """, optimize=True)
     
     def test_single_decl_in_for_loop(self):
         res = parse_string("""
             for(j = 0; j < 10; j++)
                 ushort blah;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_single_decl_in_while_loop(self):
         res = parse_string("""
             while(1)
                 ushort blah;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_single_decl_in_do_while_loop(self):
         res = parse_string("""
             while(1)
                 ushort blah;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_single_decl_in_do_while_loop(self):
         res = parse_string("""
             do
                 ushort blah;
             while(1);
-        """, optimize=False)
+        """, optimize=True)
 
     def test_single_decl_in_if(self):
         res = parse_string("""
             if(1)
                 ushort blah;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_single_decl_in_if_else(self):
         res = parse_string("""
@@ -316,14 +316,14 @@ class TestBasicParse(unittest.TestCase):
             } else {
                 ushort blah;
             }
-        """, optimize=False)
+        """, optimize=True)
 
     def test_implicit_struct_typedef(self):
         res = parse_string("""
             struct Blah { int a; } blah;
 
             Blah b;
-        """, optimize=False)
+        """, optimize=True)
     
     # I think we'll make a break from 010 syntax here...
     # it's too ridiculous to me to allow types that have
@@ -333,13 +333,13 @@ class TestBasicParse(unittest.TestCase):
             void ReadAscString1(StrAscii1 &s) {
                 ;
             }
-        """, optimize=False, predefine_types=False)
+        """, optimize=True, predefine_types=False)
     
     def test_metadata_with_string_value(self):
         res = parse_string("""
             int a <comment="this is a comment", key=val>;
             int a <comment="this is a comment">;
-        """, optimize=False)
+        """, optimize=True)
 
     def test_large_template(self):
         res = parse_file(template_path("JPGTemplate.bt"))

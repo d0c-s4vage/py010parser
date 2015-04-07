@@ -132,7 +132,7 @@ class CParser(PLYParser):
         # block_item
         self._struct_level = 0
 
-    def parse(self, text, filename='', debuglevel=2, predefine_types=True):
+    def parse(self, text, filename='', debuglevel=0, predefine_types=True):
         """ Parses C code and returns an AST.
 
             text:
