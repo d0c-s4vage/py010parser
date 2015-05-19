@@ -12,4 +12,6 @@ editor and parser. [Many](https://www.google.com/search?q=github+010+templates&o
 can be found online for most binary formats.
 
 This project (py010parser) is an effort to make 010 scripts parseable
-from python, with the intent to build additional tools using py010parser.
+from python, with the intent to build additional tools using py010parser,
+such as [pfp](http://github.com/d0c-s4vage/pfp), an 010 template
+interpreter.
