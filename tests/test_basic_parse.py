@@ -8,7 +8,7 @@ sys.path.insert(0, "..")
 from py010parser import parse_file, parse_string, c_ast
 
 def template_path(template_name):
-    return os.path.join("templates", template_name)
+    return os.path.join(os.path.dirname(__file__), "templates", template_name)
 
 class TestBasicParse(unittest.TestCase):
     def setUp(self):
