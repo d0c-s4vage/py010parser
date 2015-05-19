@@ -1,3 +1,5 @@
+![build status](https://travis-ci.org/d0c-s4vage/py010parser.svg?branch=master)
+
 # py010parser
 
 py010parser is a python library that can parse 010 templates.
