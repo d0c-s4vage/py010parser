@@ -1,5 +1,6 @@
-Copyright (c) 2012, Eli Bendersky
-All rights reserved.
+Copyright for portions of py010parser are (c) 2012, Eli Bendersky as part of
+project pycparser. All other copyright for project py010 parser are (c) 2015,
+James Johnson.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -9,7 +10,7 @@ are permitted provided that the following conditions are met:
 * Redistributions in binary form must reproduce the above copyright notice, 
   this list of conditions and the following disclaimer in the documentation 
   and/or other materials provided with the distribution.
-* Neither the name of Eli Bendersky nor the names of its contributors may 
+* Neither the name of Eli Bendersky, James Johnson, nor the names of its contributors may 
   be used to endorse or promote products derived from this software without 
   specific prior written permission.
 

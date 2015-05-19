@@ -12,7 +12,7 @@ except ImportError:
 def _run_build_tables(dir):
     from subprocess import call
     call([sys.executable, '_build_tables.py'],
-         cwd=os.path.join(dir, 'pycparser'))
+         cwd=os.path.join(dir, 'py010parser'))
 
 
 class install(_install):
@@ -31,27 +31,24 @@ class sdist(_sdist):
 
 setup(
     # metadata
-    name='pycparser',
-    description='C parser in Python',
+    name='py010parser',
+    description='010 template parser in Python',
     long_description="""
-        pycparser is a complete parser of the C language, written in
-        pure Python using the PLY parsing library.
-        It parses C code into an AST and can serve as a front-end for
-        C compilers or analysis tools.
+		py010parser is a modified fork of the pycparser project. It is
+		pure Python using the PLY parsing library. It parses 010 templates
+		into an AST.
     """,
     license='BSD',
-    version='2.10',
-    author='Eli Bendersky',
-    maintainer='Eli Bendersky',
-    author_email='eliben@gmail.com',
-    url='https://github.com/eliben/pycparser',
+    version='0.1',
+    author='James Johnson',
+    maintainer='James Johnson',
+    author_email='d0c.s4vage@gmail.com',
+    url='https://github.com/d0c-s4vage/py010parser',
     platforms='Cross Platform',
     classifiers = [
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',],
-    packages=['pycparser', 'pycparser.ply'],
-    package_data={'pycparser': ['*.cfg']},
+    packages=['py010parser', 'py010parser.ply'],
+    package_data={'py010parser': ['*.cfg']},
     cmdclass={'install': install, 'sdist': sdist},
 )
-
-
