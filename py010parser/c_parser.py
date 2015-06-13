@@ -146,16 +146,20 @@ class CParser(PLYParser):
                 Debug level to yacc
         """
         self._scope_stack = [dict()]
+        predefined_ext = []
         if predefine_types:
-            self._define_010_typedefs()
+            predefined_ext = self._define_010_typedefs().ext
 
         self.clex.filename = filename
         self.clex.reset_lineno()
         self._last_yielded_token = None
-        return self.cparser.parse(
+        res = self.cparser.parse(
                 input=text,
                 lexer=self.clex,
                 debug=debuglevel)
+
+        res.ext = predefined_ext + res.ext
+        return res
 
     ######################--   PRIVATE   --######################
 
@@ -221,7 +225,7 @@ class CParser(PLYParser):
         typedef struct _FILETIME {
           DWORD dwLowDateTime;
           DWORD dwHighDateTime;
-        } FILETIME, *PFILETIME;
+        } FILETIME;
 
         typedef uint64 OLETIME;
         typedef long time_t;
@@ -230,8 +234,10 @@ class CParser(PLYParser):
         self.clex.filename = "010_typedefs.h"
         self.clex.reset_lineno()
         
-        # we don't care about the output
-        self.cparser.parse(
+        # we DO care about the output and will prepend
+        # the children of the resulting AST to the real
+        # AST
+        return self.cparser.parse(
             input=typedefs,
             lexer=self.clex,
             debug=0 # don't dump debug output for the typedefs

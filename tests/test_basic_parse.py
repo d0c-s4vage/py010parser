@@ -27,8 +27,8 @@ class TestBasicParse(unittest.TestCase):
     def test_basic(self):
         res = parse_string("""
             struct NAME {
-                    int		stringLength;
-                    char	name[stringLength];
+                    int        stringLength;
+                    char    name[stringLength];
             } name;
         """, optimize=True)
 
@@ -343,6 +343,15 @@ class TestBasicParse(unittest.TestCase):
 
     def test_large_template(self):
         res = parse_file(template_path("JPGTemplate.bt"))
+    
+    def test_png_template(self):
+        res = parse_file(template_path("PNGTemplate.bt"))
+    
+    def test_preprocessor_with_string(self):
+        res = parse_string("""
+            //this shouldn't cause any problems
+            int a;
+        """, optimize=True)
 
 if __name__ == "__main__":
         unittest.main()

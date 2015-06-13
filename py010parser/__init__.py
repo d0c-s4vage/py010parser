@@ -12,7 +12,7 @@ __version__ = '2.10'
 
 from subprocess import Popen, PIPE
 from .c_parser import CParser
-
+import tempfile
 
 def preprocess_file(filename, cpp_path='cpp', cpp_args=''):
     """ Preprocess a file using cpp.
@@ -92,7 +92,15 @@ def parse_file(filename, use_cpp=True, cpp_path='cpp', cpp_args='',
         parser = CParser()
     return parser.parse(text, filename, predefine_types=predefine_types)
 
-def parse_string(text, parser=None, filename="<string>", optimize=True, predefine_types=True):
+def parse_string(text, parser=None, filename="<string>", optimize=True, predefine_types=True,
+        use_cpp=True, cpp_path='cpp', cpp_args=''):
+    
+    if use_cpp:
+        with tempfile.NamedTemporaryFile("w") as f:
+            f.write(text)
+            f.flush()
+            text = preprocess_file(f.name, cpp_path, cpp_args)
+
     if parser is None:
         parser = CParser(
             lex_optimize=optimize,
