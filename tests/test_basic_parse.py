@@ -23,6 +23,19 @@ class TestBasicParse(unittest.TestCase):
                 int blah;
             } name;
         """, optimize=True, predefine_types=False)
+    
+    def test_bitfield_in_if(self):
+        res = parse_string("""
+            struct {
+                if(1) {
+                    int field1:16;
+                    //int field1;
+                }
+            } blah;
+        """, optimize=True, predefine_types=False)
+
+        bitfield_decl = res.children()[0][1].type.type.children()[0][1].iftrue.children()[0][1]
+        self.assertNotEqual(type(bitfield_decl), dict)
 
     def test_basic(self):
         res = parse_string("""

@@ -18,7 +18,7 @@ from _ast_gen import ASTCodeGenerator
 
 import sys
 sys.path[0:0] = ['.', '..']
-from pycparser import c_parser
+from py010parser import c_parser
 
 # Generates the tables
 #

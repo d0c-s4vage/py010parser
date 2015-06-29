@@ -182,7 +182,7 @@ class CParser(PLYParser):
         typedef ushort wchar_t;
         typedef ushort USHORT;
         typedef uint16 UINT16;
-        typedef short WORD;
+        typedef ushort WORD;
         typedef int int32;
         typedef int INT;
         typedef int INT32;
@@ -193,7 +193,7 @@ class CParser(PLYParser):
         typedef uint UINT;
         typedef uint UINT32;
         typedef ulong ULONG;
-        typedef int DWORD;
+        typedef uint DWORD;
         typedef long long int64;
         typedef int64 quad;
         typedef int64 QUAD;
@@ -732,10 +732,23 @@ class CParser(PLYParser):
         if self._struct_level == 0:
             raise ParseError("bitfields may only be used inside of structs")
 
+        spec = p[1]
+
         if len(p) > 3:
-            p[0] = {'decl': p[1], 'bitsize': p[3]}
+            info = {
+                'decl': p[2],
+                'bitsize': p[4]
+            }
         else:
-            p[0] = {'decl': c_ast.TypeDecl(None, None, None), 'bitsize': p[2]}
+            info = {'decl': c_ast.TypeDecl(None, None, None), 'bitsize': p[2]}
+
+        decls = self._build_declarations(
+            spec=spec,
+            decls=[info],
+            typedef_namespace=True
+        )
+
+        p[0] = decls[0]
 
     # The declaration has been split to a decl_body sub-rule and
     # SEMI, because having them in a single rule created a problem
