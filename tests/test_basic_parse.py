@@ -365,6 +365,16 @@ class TestBasicParse(unittest.TestCase):
             //this shouldn't cause any problems
             int a;
         """, optimize=True)
+    
+    def test_metadata_with_space1(self):
+        res = parse_string("""
+            int a < key1 = value1 >;
+        """, optimize=True)
+    
+    def test_metadata_with_space2(self):
+        res = parse_string("""
+            int a < key1 = value1 , key2 = value2 >;
+        """, optimize=True)
 
 if __name__ == "__main__":
         unittest.main()

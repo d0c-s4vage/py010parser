@@ -71,7 +71,33 @@ class CLexer(object):
         self.lexer.lineno = 1
 
     def input(self, text):
+        # do our own preprocessing of the text
+        text = self.preprocess(text)
+
         self.lexer.input(text)
+
+    def _replace_metadata(self, match):
+        res = "<"
+        for x in range(len(match.groups()) // 3):
+            if x != 0:
+                res += ", "
+
+            key = match.group((3 * x) + 2)
+            value = match.group((3 * x) + 3)
+
+            if key is None:
+                continue
+
+            res += "{}={}".format(key.strip(), value.strip())
+        res += ">;"
+        return res
+
+    def preprocess(self, text):
+        metadata = r'<\s*((\w+)\s*=(.*?))(,\s*(\w+)\s*=(.*))*>\s*;'
+
+        text = re.sub(metadata, self._replace_metadata, text);
+
+        return text
 
     def token(self):
         self.last_token = self.lexer.token()
@@ -190,7 +216,7 @@ class CLexer(object):
     #    typedef ushort FIXEDPT <read=FIXEDPTRead, write=FIXEDPTWrite>;
     # etc.
     #metadata010 = r'<((\w+)=([^\s]+))(,\s*((\w+)=([^\s]+)))*>'
-    metadata010 = r'<((\w+)=(.*?))(,\s*(\w+)=(.*))*>'
+    metadata010 = r'<((\w+)=(.*?))(,(\w+)\s*=(.*))*>'
     
     hex_prefix = '0[xX]'
     hex_digits = '[0-9a-fA-F]+'
