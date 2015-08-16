@@ -389,6 +389,13 @@ class TestBasicParse(unittest.TestCase):
         res = parse_string("""
             int a < key1 = value1 , key2 = value2 >;
         """, optimize=True)
+    
+    def test_two_part_struct_decl(self):
+        res = parse_string("""
+			struct StructTest;
+
+			StructTest testing;
+        """, optimize=True)
 
 if __name__ == "__main__":
         unittest.main()
