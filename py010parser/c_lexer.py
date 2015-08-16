@@ -88,7 +88,7 @@ class CLexer(object):
             if key is None:
                 continue
 
-            res += "{}={}".format(key.strip(), value.strip())
+			res += key.strip() + "=" + value.strip()
         res += ">;"
         return res
 
