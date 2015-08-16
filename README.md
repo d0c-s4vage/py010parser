@@ -1,4 +1,5 @@
-![build status](https://travis-ci.org/d0c-s4vage/py010parser.svg?branch=master)
+[![master Build Status](https://travis-ci.org/d0c-s4vage/py010parser.svg?branch=master)](https://travis-ci.org/d0c-s4vage/py010parser) - master
+[![develop Build Status](https://travis-ci.org/d0c-s4vage/py010parser.svg?branch=develop)](https://travis-ci.org/d0c-s4vage/py010parser) - develop
 
 # py010parser
 
