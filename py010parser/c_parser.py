@@ -19,9 +19,9 @@ from .ast_transforms import fix_switch_cases
 class CParser(PLYParser):
     def __init__(
             self,
-            lex_optimize=True,
+            lex_optimize=False,
             lextab='py010parser.lextab',
-            yacc_optimize=True,
+            yacc_optimize=False,
             yacctab='py010parser.yacctab',
             yacc_debug=False):
         """ Create a new CParser.
