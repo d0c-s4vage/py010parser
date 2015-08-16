@@ -908,6 +908,13 @@ class CParser(PLYParser):
             coord=self._coord(p.lineno(2)))
         self._struct_level -= 1
 
+        # 010 behavior - treats structs like they all have typedefs
+        # e.g.
+        #   struct Blah { int a; } blah_t;
+        #   blah_t b;
+        #
+        self._add_typedef_name(p[2], self._coord((p.lineno(1))))
+
     def p_struct_or_union_specifier_2(self, p):
         """ struct_or_union_specifier : struct_or_union brace_open struct_item_list brace_close """
         klass = self._select_struct_union_class(p[1])
