@@ -909,8 +909,7 @@ class CParser(PLYParser):
         self._struct_level -= 1
 
     def p_struct_or_union_specifier_2(self, p):
-        """ struct_or_union_specifier : struct_or_union brace_open struct_item_list brace_close
-        """
+        """ struct_or_union_specifier : struct_or_union brace_open struct_item_list brace_close """
         klass = self._select_struct_union_class(p[1])
         p[0] = klass(
             name=None,
@@ -935,6 +934,38 @@ class CParser(PLYParser):
         #
         self._add_typedef_name(p[2], self._coord((p.lineno(1))))
 
+        self._struct_level -= 1
+
+    def p_struct_or_union_specifier_4(self, p):
+        """ struct_or_union_specifier   : struct_or_union ID LPAREN parameter_type_list RPAREN brace_open struct_item_list brace_close
+                                        | struct_or_union TYPEID LPAREN parameter_type_list RPAREN brace_open struct_item_list brace_close
+        """
+        klass = self._select_struct_union_class(p[1])
+        p[0] = klass(
+            name=p[2],
+            decls=p[7],
+            coord=self._coord(p.lineno(2)),
+            args=p[4]
+        )
+
+        # 010 behavior - treats structs like they all have typedefs
+        # e.g.
+        #   struct Blah { int a; } blah_t;
+        #   blah_t b;
+        #
+        self._add_typedef_name(p[2], self._coord((p.lineno(1))))
+
+        self._struct_level -= 1
+
+    def p_struct_or_union_specifier_5(self, p):
+        """ struct_or_union_specifier : struct_or_union LPAREN parameter_type_list RPAREN brace_open struct_item_list brace_close """
+        klass = self._select_struct_union_class(p[1])
+        p[0] = klass(
+            name=None,
+            decls=p[6],
+            coord=self._coord(p.lineno(2)),
+            args=p[3]
+        )
         self._struct_level -= 1
 
     def p_struct_or_union(self, p):

@@ -23,6 +23,20 @@ class TestBasicParse(unittest.TestCase):
                 int blah;
             } name;
         """, optimize=True, predefine_types=False)
+
+    def test_basic_struct_with_args(self):
+        res = parse_string("""
+            struct NAME (int a) {
+                int blah;
+            } name;
+        """, optimize=True, predefine_types=False)
+
+    def test_basic_struct_with_args2(self):
+        res = parse_string("""
+            typedef struct (int a) {
+                int blah;
+            } SPECIAL_STRUCT;
+        """, optimize=True, predefine_types=False)
     
     def test_bitfield_in_if(self):
         res = parse_string("""

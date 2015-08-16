@@ -644,10 +644,11 @@ class Return(Node):
     attr_names = ()
 
 class Struct(Node):
-    def __init__(self, name, decls, coord=None):
+    def __init__(self, name, decls, coord=None, args=None):
         self.name = name
         self.decls = decls
         self.coord = coord
+        self.args = args
 
     def children(self):
         nodelist = []
