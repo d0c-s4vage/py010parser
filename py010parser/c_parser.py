@@ -132,7 +132,7 @@ class CParser(PLYParser):
         # block_item
         self._struct_level = 0
 
-    def parse(self, text, filename='', debuglevel=0, predefine_types=True):
+    def parse(self, text, filename='', debuglevel=0, predefine_types=True, keep_scopes=False):
         """ Parses C code and returns an AST.
 
             text:
@@ -145,7 +145,8 @@ class CParser(PLYParser):
             debuglevel:
                 Debug level to yacc
         """
-        self._scope_stack = [dict()]
+        if not keep_scopes:
+            self._scope_stack = [dict()]
         predefined_ext = []
         if predefine_types:
             predefined_ext = self._define_010_typedefs().ext
@@ -1281,6 +1282,18 @@ class CParser(PLYParser):
                     self._add_identifier(param.name, param.coord)
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=func)
+        
+    def p_direct_declarator_7(self, p):
+        """ direct_declarator   : direct_declarator LPAREN argument_expression_list RPAREN
+                                | direct_declarator LPAREN RPAREN
+        """
+        p[0] = c_ast.StructCallTypeDecl(
+            declname=p[1],
+            type=None,
+            quals=None,
+            coord=self._coord(p.lineno(2)),
+            args=p[3],
+        )
 
     def p_pointer(self, p):
         """ pointer : TIMES type_qualifier_list_opt

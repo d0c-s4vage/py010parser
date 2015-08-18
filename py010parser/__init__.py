@@ -52,7 +52,7 @@ def preprocess_file(filename, cpp_path='cpp', cpp_args=''):
 
 
 def parse_file(filename, use_cpp=True, cpp_path='cpp', cpp_args='',
-               parser=None, predefine_types=True):
+               parser=None, predefine_types=True, keep_scopes=False):
     """ Parse a C file using pycparser.
 
         filename:
@@ -77,6 +77,10 @@ def parse_file(filename, use_cpp=True, cpp_path='cpp', cpp_args='',
         parser:
             Optional parser object to be used instead of the default CParser
 
+        keep_scopes:
+            If the parser should retain its scope stack for type names from previous
+            parsings.
+
         When successful, an AST is returned. ParseError can be
         thrown if the file doesn't parse successfully.
 
@@ -90,10 +94,10 @@ def parse_file(filename, use_cpp=True, cpp_path='cpp', cpp_args='',
 
     if parser is None:
         parser = CParser()
-    return parser.parse(text, filename, predefine_types=predefine_types)
+    return parser.parse(text, filename, predefine_types=predefine_types, keep_scopes=keep_scopes)
 
 def parse_string(text, parser=None, filename="<string>", optimize=True, predefine_types=True,
-        use_cpp=True, cpp_path='cpp', cpp_args=''):
+        use_cpp=True, cpp_path='cpp', cpp_args='', keep_scopes=False):
     
     if use_cpp:
         with tempfile.NamedTemporaryFile("w") as f:
@@ -106,4 +110,4 @@ def parse_string(text, parser=None, filename="<string>", optimize=True, predefin
             lex_optimize=optimize,
             yacc_optimize=optimize
         )
-    return parser.parse(text, filename, predefine_types=predefine_types)
+    return parser.parse(text, filename, predefine_types=predefine_types, keep_scopes=keep_scopes)

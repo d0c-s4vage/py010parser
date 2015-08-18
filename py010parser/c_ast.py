@@ -273,7 +273,7 @@ class Continue(Node):
     attr_names = ()
 
 class Decl(Node):
-    def __init__(self, name, quals, storage, funcspec, type, init, bitsize, coord=None):
+    def __init__(self, name, quals, storage, funcspec, type, init, bitsize, coord=None, args=None):
         self.name = name
         self.quals = quals
         self.storage = storage
@@ -282,6 +282,7 @@ class Decl(Node):
         self.init = init
         self.bitsize = bitsize
         self.coord = coord
+        self.args = args
         self.metadata = None
 
     def children(self):
@@ -431,6 +432,20 @@ class For(Node):
         if self.cond is not None: nodelist.append(("cond", self.cond))
         if self.next is not None: nodelist.append(("next", self.next))
         if self.stmt is not None: nodelist.append(("stmt", self.stmt))
+        return tuple(nodelist)
+
+    attr_names = ()
+
+class StructCall(Node):
+    def __init__(self, name, args, coord=None):
+        self.name = name
+        self.args = args
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        if self.name is not None: nodelist.append(("name", self.name))
+        if self.args is not None: nodelist.append(("args", self.args))
         return tuple(nodelist)
 
     attr_names = ()
@@ -716,6 +731,11 @@ class TypeDecl(Node):
         return tuple(nodelist)
 
     attr_names = ('declname','quals',)
+
+class StructCallTypeDecl(TypeDecl):
+    def __init__(self, declname, quals, type, coord=None, args=None):
+        super(self.__class__, self).__init__(declname, quals, type, coord)
+        self.args = args
 
 class Typedef(Node):
     def __init__(self, name, quals, storage, type, coord=None):
