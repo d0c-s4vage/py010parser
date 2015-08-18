@@ -37,6 +37,20 @@ class TestBasicParse(unittest.TestCase):
                 int blah;
             } SPECIAL_STRUCT;
         """, optimize=True, predefine_types=False)
+
+    def test_basic_struct_with_args_calling(self):
+        res = parse_string("""
+            typedef struct (int a) {
+                int blah;
+            } SPECIAL_STRUCT;
+
+            SPECIAL_STRUCT test(10);
+        """, optimize=True, predefine_types=False)
+        decl = res.children()[1][1]
+        self.assertTrue(isinstance(decl.type, c_ast.StructCallTypeDecl))
+        decl_args = decl.type.args.children()
+        self.assertEqual(decl_args[0][1].value, "10")
+        self.assertEqual(len(decl_args), 1)
     
     def test_bitfield_in_if(self):
         res = parse_string("""
@@ -392,9 +406,9 @@ class TestBasicParse(unittest.TestCase):
     
     def test_two_part_struct_decl(self):
         res = parse_string("""
-			struct StructTest;
+            struct StructTest;
 
-			StructTest testing;
+            StructTest testing;
         """, optimize=True)
 
 if __name__ == "__main__":
