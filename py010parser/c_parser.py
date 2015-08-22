@@ -19,9 +19,9 @@ from .ast_transforms import fix_switch_cases
 class CParser(PLYParser):
     def __init__(
             self,
-            lex_optimize=True,
+            lex_optimize=False,
             lextab='py010parser.lextab',
-            yacc_optimize=True,
+            yacc_optimize=False,
             yacctab='py010parser.yacctab',
             yacc_debug=False):
         """ Create a new CParser.
@@ -730,9 +730,6 @@ class CParser(PLYParser):
     def p_decl_body_2(self, p):
         """ decl_body : declaration_specifiers declarator COLON constant_expression
         """
-        if self._struct_level == 0:
-            raise ParseError("bitfields may only be used inside of structs")
-
         spec = p[1]
 
         if len(p) > 3:
@@ -1082,11 +1079,6 @@ class CParser(PLYParser):
         """ struct_declarator : declarator COLON constant_expression
                               | COLON constant_expression
         """
-        # means the current statement is not contained in a struct
-        # definition
-        if self._struct_level == 0:
-            raise ParseError("bitfields may only be used inside of structs")
-
         if len(p) > 3:
             p[0] = {'decl': p[1], 'bitsize': p[3]}
         else:
@@ -1285,7 +1277,6 @@ class CParser(PLYParser):
         
     def p_direct_declarator_7(self, p):
         """ direct_declarator   : direct_declarator LPAREN argument_expression_list RPAREN
-                                | direct_declarator LPAREN RPAREN
         """
         p[0] = c_ast.StructCallTypeDecl(
             declname=p[1],
@@ -1774,6 +1765,14 @@ class CParser(PLYParser):
     def p_unary_expression_3(self, p):
         """ unary_expression    : SIZEOF unary_expression
                                 | SIZEOF LPAREN type_name RPAREN
+                                | EXISTS unary_expression
+                                | EXISTS LPAREN type_name RPAREN
+                                | FUNCTION_EXISTS unary_expression
+                                | FUNCTION_EXISTS LPAREN type_name RPAREN
+                                | PARENTOF unary_expression
+                                | PARENTOF LPAREN type_name RPAREN
+                                | STARTOF unary_expression
+                                | STARTOF LPAREN type_name RPAREN
         """
         p[0] = c_ast.UnaryOp(
             p[1],

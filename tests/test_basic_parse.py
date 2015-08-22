@@ -45,12 +45,41 @@ class TestBasicParse(unittest.TestCase):
             } SPECIAL_STRUCT;
 
             SPECIAL_STRUCT test(10);
+
+            int blah() {
+                return 10;
+            }
         """, optimize=True, predefine_types=False)
         decl = res.children()[1][1]
         self.assertTrue(isinstance(decl.type, c_ast.StructCallTypeDecl))
         decl_args = decl.type.args.children()
         self.assertEqual(decl_args[0][1].value, "10")
         self.assertEqual(len(decl_args), 1)
+    
+    def test_sizeof_unary(self):
+        res = parse_string("""
+            sizeof(this);
+        """)
+    
+    def test_exists_unary(self):
+        res = parse_string("""
+            exists(this);
+        """)
+    
+    def test_parentof_unary(self):
+        res = parse_string("""
+            parentof(this);
+        """)
+    
+    def test_function_exists_unary(self):
+        res = parse_string("""
+            function_exists(this);
+        """)
+    
+    def test_startof_unary(self):
+        res = parse_string("""
+            startof(this);
+        """)
     
     def test_bitfield_in_if(self):
         res = parse_string("""
@@ -64,6 +93,13 @@ class TestBasicParse(unittest.TestCase):
 
         bitfield_decl = res.children()[0][1].type.type.children()[0][1].iftrue.children()[0][1]
         self.assertNotEqual(type(bitfield_decl), dict)
+
+    def test_bitfield_outside_of_struct(self):
+        res = parse_string("""
+            uint blah1:4;
+            uint blah2:8;
+            uint blah3:4;
+        """, optimize=True, predefine_types=True)
 
     def test_basic(self):
         res = parse_string("""
