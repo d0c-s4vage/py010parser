@@ -56,6 +56,46 @@ class TestBasicParse(unittest.TestCase):
         self.assertEqual(decl_args[0][1].value, "10")
         self.assertEqual(len(decl_args), 1)
     
+    def test_struct_with_args_calling_not_func_decl(self):
+        res = parse_string("""
+            typedef struct(int a) {
+                char chars[a];
+            } test_structure;
+
+            local int size = 4;
+            test_structure test(size); // this SHOULD NOT be a function declaration
+        """, predefine_types=False)
+        decl = res.children()[2][1]
+        self.assertEqual(decl.type.__class__, c_ast.StructCallTypeDecl)
+        self.assertEqual(decl.type.args.__class__, c_ast.ExprList)
+    
+    def test_struct_with_args_calling_not_func_decl2(self):
+        res = parse_string("""
+            typedef struct(int a) {
+                char chars[a];
+            } test_structure;
+
+            local int size = 4;
+            test_structure test(size); // this SHOULD NOT be a function declaration
+        """, predefine_types=False)
+        decl = res.children()[2][1]
+        self.assertEqual(decl.type.__class__, c_ast.StructCallTypeDecl)
+        self.assertEqual(decl.type.args.__class__, c_ast.ExprList)
+    
+    def test_struct_with_args_calling_not_func_decl3(self):
+        res = parse_string("""
+            typedef struct(int a, int b) {
+                char chars1[a];
+                char chars2[b];
+            } test_structure;
+
+            local int size = 4;
+            test_structure test(size, 5); // this SHOULD NOT be a function declaration
+        """, predefine_types=False)
+        decl = res.children()[2][1]
+        self.assertEqual(decl.type.__class__, c_ast.StructCallTypeDecl)
+        self.assertEqual(decl.type.args.__class__, c_ast.ExprList)
+    
     def test_sizeof_unary(self):
         res = parse_string("""
             sizeof(this);

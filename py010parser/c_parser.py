@@ -79,11 +79,11 @@ class CParser(PLYParser):
         rules_with_opt = [
             'abstract_declarator',
             'assignment_expression',
+            'argument_expression_list',
             'declaration_list',
             'declaration_specifiers',
             'designation',
             'expression',
-            'identifier_list',
             'init_declarator_list',
             'parameter_type_list',
             'specifier_qualifier_list',
@@ -113,6 +113,14 @@ class CParser(PLYParser):
         # If 'name' is not a key in _scope_stack[n] then 'name' was not defined
         # in this scope at all.
         self._scope_stack = [dict()]
+
+        # without some sort of tracking mechanism (this), we can't tell the
+        # difference between declaring a structure with parameters and declaring
+        # a function prototype. E.g.:
+        #
+        # local int some_param = 5;
+        # test_structure test(some_param);
+        self._structs_with_params = {}
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -534,6 +542,38 @@ class CParser(PLYParser):
                 fixed_decl = declaration
             else:
                 fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
+            
+            decld_type = ""
+            try:
+                decld_type = " ".join(fixed_decl.type.type.type.names)
+            except Exception as e:
+                pass
+
+            if isinstance(fixed_decl.type, c_ast.StructCallTypeDecl):
+                fixed_decl.show()
+                print(fixed_decl.type.args)
+                print(fixed_decl.type.args.exprs)
+
+            # without some sort of tracking mechanism (this), we can't tell the
+            # difference between declaring a structure with parameters and declaring
+            # a function prototype. E.g.:
+            #
+            # local int some_param = 5;
+            # test_structure test(some_param);
+            if self._is_type_in_scope(decld_type) and isinstance(fixed_decl.type, c_ast.FuncDecl) and decld_type in self._structs_with_params:
+                # TODO change it from FuncDecl to StructCallTypeDecl
+                old = fixed_decl.type
+                if isinstance(old.args, c_ast.ExprList):
+                    new_args = old.args
+                else:
+                    new_args = c_ast.ExprList(old.args.params, old.args.coord)
+                fixed_decl.type = c_ast.StructCallTypeDecl(
+                    declname=None,
+                    type=old.type,
+                    quals=None,
+                    coord=old.coord,
+                    args=new_args
+                )
 
             # Add the type name defined by typedef to a
             # symbol table (for usage in the lexer)
@@ -545,6 +585,10 @@ class CParser(PLYParser):
                     self._add_identifier(fixed_decl.name, fixed_decl.coord)
 
             declarations.append(fixed_decl)
+
+        if is_typedef and isinstance(spec["type"][0], c_ast.Struct) and spec["type"][0].args is not None:
+            decld_name = declarations[0].type.declname
+            self._structs_with_params[decld_name] = True
 
         for declaration in declarations:
             declaration.metadata = metadata
@@ -959,6 +1003,7 @@ class CParser(PLYParser):
         #   blah_t b;
         #
         self._add_typedef_name(p[2], self._coord((p.lineno(1))))
+        self._structs_with_params[p[2]] = True
 
         self._struct_level -= 1
 
@@ -1246,11 +1291,19 @@ class CParser(PLYParser):
             coord=p[1].coord)
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
-
+        
     def p_direct_declarator_6(self, p):
-        """ direct_declarator   : direct_declarator LPAREN parameter_type_list RPAREN
-                                | direct_declarator LPAREN identifier_list_opt RPAREN
+        """ direct_declarator   : direct_declarator LPAREN RPAREN
+                                | direct_declarator LPAREN parameter_type_list_opt RPAREN
+                                | direct_declarator LPAREN argument_expression_list_opt RPAREN
         """
+        # at this point it is either a struct declaration with parameters or
+        # a function declaration. We'll sort it out later in _build_declarations
+
+        if len(p) == 4:
+            # set this to be the args
+            p[3] = None
+
         func = c_ast.FuncDecl(
             args=p[3],
             type=None,
@@ -1274,17 +1327,6 @@ class CParser(PLYParser):
                     self._add_identifier(param.name, param.coord)
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=func)
-        
-    def p_direct_declarator_7(self, p):
-        """ direct_declarator   : direct_declarator LPAREN argument_expression_list RPAREN
-        """
-        p[0] = c_ast.StructCallTypeDecl(
-            declname=p[1],
-            type=None,
-            quals=None,
-            coord=self._coord(p.lineno(2)),
-            args=p[3],
-        )
 
     def p_pointer(self, p):
         """ pointer : TIMES type_qualifier_list_opt
@@ -1386,16 +1428,6 @@ class CParser(PLYParser):
             decls=[dict(decl=p[2], init=None)])[0]
 
         p[0] = decl
-
-    def p_identifier_list(self, p):
-        """ identifier_list : identifier
-                            | identifier_list COMMA identifier
-        """
-        if len(p) == 2: # single parameter
-            p[0] = c_ast.ParamList([p[1]], p[1].coord)
-        else:
-            p[1].params.append(p[3])
-            p[0] = p[1]
 
     def p_initializer_1(self, p):
         """ initializer : assignment_expression
