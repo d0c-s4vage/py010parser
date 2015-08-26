@@ -39,7 +39,7 @@ setup(
 		into an AST.
     """,
     license='BSD',
-    version='0.1.4',
+    version='0.1.5',
     author='James Johnson',
     maintainer='James Johnson',
     author_email='d0c.s4vage@gmail.com',
@@ -49,7 +49,7 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',],
     packages=['py010parser', 'py010parser.ply'],
-	download_url="https://github.com/d0c-s4vage/py010parser/tarball/v0.1.4",
+	download_url="https://github.com/d0c-s4vage/py010parser/tarball/v0.1.5",
 	keywords=["010", "template", "parser"],
     package_data={'py010parser': ['*.cfg']},
     cmdclass={'install': install, 'sdist': sdist},
