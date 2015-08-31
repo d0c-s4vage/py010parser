@@ -24,6 +24,21 @@ class TestBasicParse(unittest.TestCase):
             } name;
         """, optimize=True, predefine_types=False)
 
+    def test_basic_struct_typedef(self):
+        res = parse_string("""
+            typedef union {
+                int some_int;
+                struct {
+                    char a;
+                    char b;
+                    char c;
+                    char d;
+                } some_chars;
+            } blah;
+
+            blah some_union;
+        """, optimize=True, predefine_types=False)
+
     def test_basic_struct_with_args(self):
         res = parse_string("""
             struct NAME (int a) {
@@ -95,6 +110,43 @@ class TestBasicParse(unittest.TestCase):
         decl = res.children()[2][1]
         self.assertEqual(decl.type.__class__, c_ast.StructCallTypeDecl)
         self.assertEqual(decl.type.args.__class__, c_ast.ExprList)
+    
+    def test_struct_with_args_calling_not_func_decl4(self):
+        res = parse_string("""
+            int sum(int a, int b) {
+                return a + b;
+            }
+
+            typedef struct(int a) {
+                char chars1[a];
+            } test_structure;
+
+            local int size = 4;
+            test_structure test(sum(size, 3)); // this SHOULD NOT be a function declaration
+        """, predefine_types=False)
+        decl = res.children()[3][1]
+        self.assertEqual(decl.type.__class__, c_ast.StructCallTypeDecl)
+        self.assertEqual(decl.type.args.__class__, c_ast.ExprList)
+    
+    def test_struct_with_args_calling_not_func_decl5(self):
+        res = parse_string("""
+            // variable-width integer used by encoded_value types
+            typedef struct (int size, int type) {
+                local int s = size + 1;
+                local int t = type;
+                local int i;
+                
+                for(i=0; i<s; i++) {
+                    ubyte val <comment="Encoded value element">;
+                }
+            } EncodedValue <read=EncodedValueRead, optimize=false>;
+
+            string EncodedValueRead(EncodedValue &v) {
+                local string s = "";
+
+                return s;
+            }
+        """, predefine_types=True)
     
     def test_sizeof_unary(self):
         res = parse_string("""
