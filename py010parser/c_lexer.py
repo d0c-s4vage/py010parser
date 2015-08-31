@@ -10,7 +10,7 @@ import re
 import sys
 
 from .ply import lex
-from .ply.lex import TOKEN
+from .ply.lex import TOKEN,LexToken
 
 
 class CLexer(object):
@@ -48,6 +48,9 @@ class CLexer(object):
 
         # Keeps track of the last token returned from self.token()
         self.last_token = None
+
+        # a token that has been inserted into the token stream
+        self.inserted_token = None
 
         # Allow either "# line" or "# <num>" to support GCC's
         # cpp output
@@ -98,9 +101,22 @@ class CLexer(object):
         text = re.sub(metadata, self._replace_metadata, text);
 
         return text
+    
+    def insert_token(self, name):
+        new_token = LexToken()
+        new_token.type = name
+        new_token.value = name
+        new_token.lineno = self.last_token.lineno
+        new_token.lexpos = self.last_token.lexpos
+
+        self.inserted_token = new_token
 
     def token(self):
-        self.last_token = self.lexer.token()
+        if self.inserted_token is not None:
+            self.last_token = self.inserted_token
+            self.inserted_token = None
+        else:
+            self.last_token = self.lexer.token()
         return self.last_token
 
     def find_tok_column(self, token):
@@ -151,6 +167,9 @@ class CLexer(object):
         # Identifiers
         'ID',
 
+        # for parameterized structs
+        'STRUCT_CALL',
+
         # Type identifiers (identifiers previously defined as
         # types with typedef)
         'TYPEID',
@@ -199,8 +218,8 @@ class CLexer(object):
         # pre-processor
         'PPHASH',      # '#'
 
-		# 010-metadata
-		'METADATA010',
+        # 010-metadata
+        'METADATA010',
     )
 
     ##
@@ -360,6 +379,8 @@ class CLexer(object):
     def t_NEWLINE(self, t):
         r'\n+'
         t.lexer.lineno += t.value.count("\n")
+    
+    t_STRUCT_CALL       = r'SHOULDNOTEVARMATCHANYTHINGEVER'
 
     # Operators
     t_PLUS              = r'\+'
@@ -514,7 +535,7 @@ class CLexer(object):
         match = re.match(self.metadata010, t.value)
         kvs = {}
 
-     	# split into groups of three
+         # split into groups of three
         #for full,k,v in zip(*(iter(match.groups()),) * 3):
             #if full is not None:
                 #kvs[k] = v
