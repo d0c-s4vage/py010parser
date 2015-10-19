@@ -14,6 +14,9 @@ from subprocess import Popen, PIPE
 from .c_parser import CParser
 import tempfile
 
+from ply import cpp
+import ply.lex as lex
+
 def preprocess_file(filename, cpp_path='cpp', cpp_args=''):
     """ Preprocess a file using cpp.
 
@@ -100,10 +103,18 @@ def parse_string(text, parser=None, filename="<string>", optimize=True, predefin
         use_cpp=True, cpp_path='cpp', cpp_args='', keep_scopes=False):
     
     if use_cpp:
-        with tempfile.NamedTemporaryFile("w") as f:
-            f.write(text)
-            f.flush()
-            text = preprocess_file(f.name, cpp_path, cpp_args)
+        lexer = lex.lex(object=cpp)
+
+        preprocessor = ply.cpp.Preprocessor(lexer)
+        preprocessor.parse(text, filename)
+
+        text = ""
+
+        while True:
+            tok = preprocessor.token()
+            if not tok: break
+            if tok.type != "CPP_COMMENT":
+                text += tok.value
 
     if parser is None:
         parser = CParser(
