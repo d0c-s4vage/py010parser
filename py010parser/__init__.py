@@ -10,48 +10,10 @@
 __all__ = ['c_lexer', 'c_parser', 'c_ast']
 __version__ = '0.1.6'
 
-from subprocess import Popen, PIPE
 from .c_parser import CParser
-import tempfile
 
 from ply import cpp
 import ply.lex as lex
-
-def preprocess_file(filename, cpp_path='cpp', cpp_args=''):
-    """ Preprocess a file using cpp.
-
-        filename:
-            Name of the file you want to preprocess.
-
-        cpp_path:
-        cpp_args:
-            Refer to the documentation of parse_file for the meaning of these
-            arguments.
-
-        When successful, returns the preprocessed file's contents.
-        Errors from cpp will be printed out.
-    """
-    path_list = [cpp_path]
-    if isinstance(cpp_args, list):
-        path_list += cpp_args
-    elif cpp_args != '':
-        path_list += [cpp_args]
-    path_list += [filename]
-
-    try:
-        # Note the use of universal_newlines to treat all newlines
-        # as \n for Python's purpose
-        #
-        pipe = Popen(   path_list,
-                        stdout=PIPE,
-                        universal_newlines=True)
-        text = pipe.communicate()[0]
-    except OSError as e:
-        raise RuntimeError("Unable to invoke 'cpp'.  " +
-            'Make sure its path was passed correctly\n' +
-            ('Original error: %s' % e))
-
-    return text
 
 
 def parse_file(filename, use_cpp=True, cpp_path='cpp', cpp_args='',
