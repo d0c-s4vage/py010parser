@@ -31,26 +31,27 @@ class sdist(_sdist):
 
 setup(
     # metadata
-    name='py010parser',
-    description='010 template parser in Python',
-    long_description="""
+    name             = 'py010parser',
+    description      = '010 template parser in Python',
+    long_description = """
 		py010parser is a modified fork of the pycparser project. It is
 		pure Python using the PLY parsing library. It parses 010 templates
 		into an AST.
     """,
-    license='BSD',
-    version='0.1.6',
-    author='James Johnson',
-    maintainer='James Johnson',
-    author_email='d0c.s4vage@gmail.com',
-    url='https://github.com/d0c-s4vage/py010parser',
-    platforms='Cross Platform',
-    classifiers = [
+    license      = 'BSD',
+    version      = '0.1.6',
+    author       = 'James Johnson',
+    maintainer   = 'James Johnson',
+    author_email = 'd0c.s4vage@gmail.com',
+    url          = 'https://github.com/d0c-s4vage/py010parser',
+    platforms    = 'Cross Platform',
+    classifiers  =  [
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',],
-    packages=['py010parser', 'py010parser.ply'],
-	download_url="https://github.com/d0c-s4vage/py010parser/tarball/v0.1.6",
-	keywords=["010", "template", "parser"],
-    package_data={'py010parser': ['*.cfg']},
-    cmdclass={'install': install, 'sdist': sdist},
+    packages         = ['py010parser', 'py010parser.ply'],
+	download_url     = "https://github.com/d0c-s4vage/py010parser/tarball/v0.1.6",
+	keywords         = ["010", "template", "parser"],
+    package_data     = {'py010parser': ['*.cfg']},
+    cmdclass         = {'install': install, 'sdist': sdist},
+	install_requires = open(os.path.join(os.path.dirname(__file__), "requirements.txt")).read().split("\n"),
 )

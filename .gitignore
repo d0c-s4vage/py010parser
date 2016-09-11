@@ -1,3 +1,4 @@
+*.sw[opn]
 *.pyc
 tests/parser.out
 tests/*tab.py
