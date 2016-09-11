@@ -515,6 +515,9 @@ class TestBasicParse(unittest.TestCase):
     
     def test_png_template(self):
         res = parse_file(template_path("PNGTemplate.bt"))
+
+    def test_exe_template(self):
+        res = parse_file(template_path("EXETemplate.bt"))
     
     def test_preprocessor_with_string(self):
         res = parse_string("""

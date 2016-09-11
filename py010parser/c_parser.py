@@ -1016,6 +1016,13 @@ class CParser(PLYParser):
         """
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
+    # 010 allows an empty struct. See issue #8
+    # https://github.com/d0c-s4vage/py010parser/issues/8
+    def p_struct_item_list2(self, p):
+        """ struct_item_list     : 
+        """
+        p[0] = []
+
     def p_struct_item(self, p):
         """ struct_item    : block_item
                            | struct_declaration
