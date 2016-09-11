@@ -8,6 +8,7 @@
 # This module implements an ANSI-C style lexical preprocessor for PLY. 
 # -----------------------------------------------------------------------------
 from __future__ import generators
+import six
 
 # -----------------------------------------------------------------------------
 # Default preprocessor lexer definitions.   These tokens are enough to get
@@ -262,7 +263,7 @@ class Preprocessor(object):
     def group_lines(self,input):
         lex = self.lexer.clone()
         lines = [x.rstrip() for x in input.splitlines()]
-        for i in xrange(len(lines)):
+        for i in six.moves.xrange(len(lines)):
             j = i+1
             while lines[i].endswith('\\') and (j < len(lines)):
                 lines[i] = lines[i][:-1]+lines[j]
@@ -771,7 +772,7 @@ class Preprocessor(object):
     # ----------------------------------------------------------------------
 
     def define(self,tokens):
-        if isinstance(tokens,(str,unicode)):
+        if isinstance(tokens,(six.string_types)):
             tokens = self.tokenize(tokens)
 
         linetok = tokens

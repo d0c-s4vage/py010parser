@@ -255,6 +255,34 @@ class TestBasicParse(unittest.TestCase):
                 ;
             }
         """, optimize=True, predefine_types=False)
+
+    def test_comment_single_line(self):
+        res = parse_string("""
+            // this is a comment
+            int blah;
+        """, optimize=True, predefine_types=False)
+
+        self.assertEqual(len(res.children()), 1, "should only have one node in the AST")
+
+        node = res.children()[0][1]
+        self.assertEqual(node.name, "blah")
+        self.assertEqual(node.type.declname, "blah")
+        self.assertEqual(node.type.type.names, ["int"])
+
+    def test_comment_multi_line(self):
+        res = parse_string("""
+            /*
+            this is a comment
+            */
+            int blah;
+        """, optimize=True, predefine_types=False)
+
+        self.assertEqual(len(res.children()), 1, "should only have one node in the AST")
+
+        node = res.children()[0][1]
+        self.assertEqual(node.name, "blah")
+        self.assertEqual(node.type.declname, "blah")
+        self.assertEqual(node.type.type.names, ["int"])
     
     def test_metadata_with_string_value(self):
         res = parse_string("""
