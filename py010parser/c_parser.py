@@ -155,6 +155,10 @@ class CParser(PLYParser):
         """
         if not keep_scopes:
             self._scope_stack = [dict()]
+            # see issue #9: https://github.com/d0c-s4vage/py010parser/issues/9. This definitely needs to
+            # be reset with every parse, UNLESS keep_scopes is True.
+            self._structs_with_params = {}
+
         predefined_ext = []
         if predefine_types:
             predefined_ext = self._define_010_typedefs().ext
