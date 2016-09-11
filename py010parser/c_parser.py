@@ -140,6 +140,12 @@ class CParser(PLYParser):
         # block_item
         self._struct_level = 0
 
+        # we also need to keep track if we are currently inside of
+        # an enum so that we can allow a few keywords to be enum
+        # values (e.g. goto).
+        # See issue #7 https://github.com/d0c-s4vage/py010parser/issues/7
+        self._in_enum = False
+
     def parse(self, text, filename='', debuglevel=0, predefine_types=True, keep_scopes=False):
         """ Parses C code and returns an AST.
 
@@ -827,9 +833,6 @@ class CParser(PLYParser):
 
     def p_storage_class_specifier(self, p):
         """ storage_class_specifier : AUTO
-                                    | REGISTER
-                                    | STATIC
-                                    | EXTERN
                                     | TYPEDEF
         """
         p[0] = p[1]
@@ -871,7 +874,6 @@ class CParser(PLYParser):
     def p_type_qualifier(self, p):
         """ type_qualifier  : CONST
                             | RESTRICT
-                            | VOLATILE
                             | LOCAL
         """
         p[0] = p[1]
@@ -1246,25 +1248,6 @@ class CParser(PLYParser):
             type=None,
             dim=p[4],
             dim_quals=p[3] if p[3] != None else [],
-            coord=p[1].coord)
-
-        p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
-
-    def p_direct_declarator_4(self, p):
-        """ direct_declarator   : direct_declarator LBRACKET STATIC type_qualifier_list_opt assignment_expression RBRACKET
-                                | direct_declarator LBRACKET type_qualifier_list STATIC assignment_expression RBRACKET
-        """
-        # Using slice notation for PLY objects doesn't work in Python 3 for the
-        # version of PLY embedded with pycparser; see PLY Google Code issue 30.
-        # Work around that here by listing the two elements separately.
-        listed_quals = [item if isinstance(item, list) else [item]
-            for item in [p[3],p[4]]]
-        dim_quals = [qual for sublist in listed_quals for qual in sublist
-            if qual is not None]
-        arr = c_ast.ArrayDecl(
-            type=None,
-            dim=p[5],
-            dim_quals=dim_quals,
             coord=p[1].coord)
 
         p[0] = self._type_modify_decl(decl=p[1], modifier=arr)
@@ -1677,18 +1660,14 @@ class CParser(PLYParser):
                          p[4], p[6], p[8], self._coord(p.lineno(1)))
 
     def p_jump_statement_1(self, p):
-        """ jump_statement  : GOTO ID SEMI """
-        p[0] = c_ast.Goto(p[2], self._coord(p.lineno(1)))
-
-    def p_jump_statement_2(self, p):
         """ jump_statement  : BREAK SEMI """
         p[0] = c_ast.Break(self._coord(p.lineno(1)))
 
-    def p_jump_statement_3(self, p):
+    def p_jump_statement_2(self, p):
         """ jump_statement  : CONTINUE SEMI """
         p[0] = c_ast.Continue(self._coord(p.lineno(1)))
 
-    def p_jump_statement_4(self, p):
+    def p_jump_statement_3(self, p):
         """ jump_statement  : RETURN expression SEMI
                             | RETURN SEMI
         """
