@@ -8,7 +8,7 @@
 # License: BSD
 #-----------------------------------------------------------------
 __all__ = ['c_lexer', 'c_parser', 'c_ast']
-__version__ = '0.1.9'
+__version__ = '0.1.10'
 
 from .c_parser import CParser
 

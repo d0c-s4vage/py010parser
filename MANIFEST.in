@@ -7,6 +7,7 @@ include README.*
 include LICENSE
 include CHANGES
 include setup.*
+include requirements.txt
 
 recursive-exclude tests yacctab.* lextab.*
 recursive-exclude examples yacctab.* lextab.*

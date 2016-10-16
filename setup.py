@@ -39,7 +39,7 @@ setup(
 		into an AST.
     """,
     license      = 'BSD',
-    version      = '0.1.9',
+    version      = '0.1.10',
     author       = 'James Johnson',
     maintainer   = 'James Johnson',
     author_email = 'd0c.s4vage@gmail.com',
