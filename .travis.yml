@@ -5,7 +5,10 @@ python:
 - '3.5'
 - '3.6'
 - '3.7'
-script: python tests/all_tests.py
+script:
+  - export VERSION=$(sed 's/^v//' <<<"${TRAVIS_TAG:-0.0.0+$(sed 's^[/_-]^.^g' <<<$TRAVIS_BRANCH)}")
+  - find . -type f -exec sed -i "s/{{VERSION}}/${VERSION}/g" {} \;
+  - python tests/all_tests.py
 
 deploy:
   provider: pypi
