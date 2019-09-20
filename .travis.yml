@@ -1,8 +1,15 @@
 language: python
 python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "3.7"
+- '2.7'
+- '3.4'
+- '3.5'
+- '3.6'
+- '3.7'
 script: python tests/all_tests.py
+deploy:
+  provider: pypi
+  password:
+    secure: wMAlxKm7TkKVwbHs2ZimwQ6FYoxsmN7i/NpkfdgewMQ/UlwtUjs4PdUux8KUBMzwFOfuscb9jFDGvpoElxHQuZ+cW3Cbdpf2zYLU0eoDsV2H5oaR87QjCvdp09fK8GPVaE5UhSfXQTuD8PB42RaC+VweZDBINvtuImtkzqmtE8A=
+  user: d0c.s4vage
+  on:
+    tags: true
