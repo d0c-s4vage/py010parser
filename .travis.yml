@@ -9,7 +9,7 @@ script: python tests/all_tests.py
 deploy:
   provider: pypi
   password:
-    secure: wMAlxKm7TkKVwbHs2ZimwQ6FYoxsmN7i/NpkfdgewMQ/UlwtUjs4PdUux8KUBMzwFOfuscb9jFDGvpoElxHQuZ+cW3Cbdpf2zYLU0eoDsV2H5oaR87QjCvdp09fK8GPVaE5UhSfXQTuD8PB42RaC+VweZDBINvtuImtkzqmtE8A=
+    secure: "toSGwKdSbHW2NkZrQ9/XokL9bWlSYe7ziUBUhE6/8TXlSE9bIUbjEC6oJny43FCG8pZC77C3hkSyULjq8fSZyUGNqWTkpgSv+9CLsmo0PHGJbNsSGDxL3oatJ63yR+5jBdFhaSxI16Bw/AQSoFHhlL/+biJTAhO2uO+BDyUFD5o="
   user: d0c.s4vage
   on:
     tags: true
