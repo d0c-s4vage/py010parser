@@ -11,6 +11,7 @@ __all__ = ['c_lexer', 'c_parser', 'c_ast']
 __version__ = '0.1.10'
 
 
+import os
 import subprocess
 import tempfile
 
@@ -114,10 +115,14 @@ def parse_string(text, parser=None, filename="<string>", optimize=True, predefin
         use_cpp=True, cpp_path='cpp', cpp_args='', keep_scopes=False):
     
     if use_cpp:
-        with tempfile.NamedTemporaryFile("w") as f:
+        tempfile_path = ''
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
             f.write(text)
             f.flush()
-            text = preprocess_file(f.name, cpp_path, cpp_args)
+            tempfile_path = f.name
+
+        text = preprocess_file(tempfile_path, cpp_path, cpp_args)
+        os.unlink(tempfile_path)
 
     if parser is None:
         parser = CParser(
