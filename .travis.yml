@@ -6,10 +6,13 @@ python:
 - '3.6'
 - '3.7'
 script: python tests/all_tests.py
+
 deploy:
   provider: pypi
   password:
     secure: "toSGwKdSbHW2NkZrQ9/XokL9bWlSYe7ziUBUhE6/8TXlSE9bIUbjEC6oJny43FCG8pZC77C3hkSyULjq8fSZyUGNqWTkpgSv+9CLsmo0PHGJbNsSGDxL3oatJ63yR+5jBdFhaSxI16Bw/AQSoFHhlL/+biJTAhO2uO+BDyUFD5o="
+  skip_cleanup: true
+  skip_existing: true
   user: d0c.s4vage
   on:
     tags: true
