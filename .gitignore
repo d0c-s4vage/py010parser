@@ -15,4 +15,5 @@ parser.out
 .tox
 utils/z.c
 *.egg-info
-
+tags
+venv*
