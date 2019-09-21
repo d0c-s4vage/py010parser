@@ -1,5 +1,6 @@
-[![master Build Status](https://travis-ci.org/d0c-s4vage/py010parser.svg?branch=master)](https://travis-ci.org/d0c-s4vage/py010parser) - master
-[![develop Build Status](https://travis-ci.org/d0c-s4vage/py010parser.svg?branch=develop)](https://travis-ci.org/d0c-s4vage/py010parser) - develop
+[![Master Build Status](https://travis-ci.org/d0c-s4vage/py010parser.svg?branch=master)](https://travis-ci.org/d0c-s4vage/py010parser)
+[![PyPI Statistics](https://img.shields.io/pypi/dm/py010parser)](https://pypistats.org/packages/py010parser)
+[![Latest Release](https://img.shields.io/pypi/v/py010parser)](https://pypi.python.org/pypi/py010parser/)
 
 # py010parser
 
