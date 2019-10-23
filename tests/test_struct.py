@@ -8,6 +8,7 @@ import unittest
 
 sys.path.insert(0, "..")
 from py010parser import parse_file, parse_string, c_ast
+from py010parser.plyparser import ParseError
 
 
 class TestStruct(unittest.TestCase):
@@ -40,11 +41,16 @@ class TestStruct(unittest.TestCase):
         """, optimize=True, predefine_types=False)
 
     def test_basic_struct_with_args(self):
-        res = parse_string("""
-            struct NAME (int a) {
-                int blah;
-            } name;
-        """, optimize=True, predefine_types=False)
+        def inner_test():
+            res = parse_string("""
+                struct NAME (int a) {
+                    int blah;
+                } name;
+            """, optimize=True, predefine_types=False)
+
+        # this is invalid syntax! name should be name(X) with X being the "a"
+        # parameter!
+        self.assertRaises(ParseError, inner_test)
 
     def test_basic_struct_with_args2(self):
         res = parse_string("""
@@ -52,6 +58,22 @@ class TestStruct(unittest.TestCase):
                 int blah;
             } SPECIAL_STRUCT;
         """, optimize=True, predefine_types=False)
+
+    def test_basic_struct_with_args3(self):
+        res = parse_string("""
+            typedef struct(int variable)
+            {
+                unsigned short a;
+                unsigned short b;
+            } RESOURCE_DIRECTORY_TABLE;
+
+            struct RESOURCE_DIRECTORY_TABLE test(1);
+        """, optimize=True, predefine_types=False)
+        decl = res.children()[1][1]
+        self.assertTrue(isinstance(decl.type, c_ast.StructCallTypeDecl))
+        decl_args = decl.type.args.children()
+        self.assertEqual(decl_args[0][1].value, "1")
+        self.assertEqual(len(decl_args), 1)
 
     def test_basic_struct_with_args_calling(self):
         res = parse_string("""
