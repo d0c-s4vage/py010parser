@@ -102,6 +102,11 @@ class TestBasicParse(unittest.TestCase):
             local int a <hidden=true>;
         """, optimize=True)
 
+    def test_metadata_with_quoted_strings(self):
+        res = parse_string("""
+            local int a <comment=">">;
+        """, optimize=True)
+
     def test_typedef(self):
         res = parse_string("""
             typedef unsigned int UINT2;
