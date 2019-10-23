@@ -104,8 +104,13 @@ class TestBasicParse(unittest.TestCase):
 
     def test_metadata_with_quoted_strings(self):
         res = parse_string("""
-            local int a <comment=">">;
-        """, optimize=True)
+            local int asdfsdf <comment="Hello > there">;
+        """, optimize=True, predefine_types=False)
+
+        node = res.children()[0][1]
+        self.assertEqual(len(node.metadata.values), 1)
+        self.assertEqual(node.metadata.values[0][0], "comment")
+        self.assertEqual(node.metadata.values[0][1], '"Hello > there"')
 
     def test_typedef(self):
         res = parse_string("""

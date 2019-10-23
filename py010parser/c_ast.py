@@ -528,26 +528,14 @@ class ID(Node):
     attr_names = ('name',)
 
 class Metadata010(Node):
-    metadata010 = r'<((\w+)=(.*?))(,\s*(\w+)=(.*))*>'
-
-    def __init__(self, value, coord=None):
-        self.value = value
+    def __init__(self, values, coord=None):
+        self.values = values
         self.coord = coord
-
-        match = re.match(self.metadata010, value)
-        kvs = {}
-
-        # split into groups of three
-        for full,k,v in zip(*(iter(match.groups()),) * 3):
-            if full is not None:
-                kvs[k] = v
-
-        self.keyvals = kvs
     
     def children(self):
-        return tuple([])
+        return self.values
     
-    attr_names = ('keyvals')
+    attr_names = ('values')
 
 class IdentifierType(Node):
     def __init__(self, names, coord=None):

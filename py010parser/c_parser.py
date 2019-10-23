@@ -19,11 +19,11 @@ from .ast_transforms import fix_switch_cases
 class CParser(PLYParser):
     def __init__(
             self,
-            lex_optimize=True,
+            lex_optimize=False,
             lextab='py010parser.lextab',
-            yacc_optimize=True,
+            yacc_optimize=False,
             yacctab='py010parser.yacctab',
-            yacc_debug=False):
+            yacc_debug=True):
         """ Create a new CParser.
 
             Some arguments for controlling the debug/optimization
@@ -91,6 +91,7 @@ class CParser(PLYParser):
             'type_qualifier_list',
             'struct_declarator_list',
             'metadata010',
+            'metadata_assignment_list',
             'enum_type'
         ]
 
@@ -1586,11 +1587,34 @@ class CParser(PLYParser):
         p[0] = p[1] if (len(p) == 2 or p[2] == [None]) else p[1] + p[2]
 
     def p_metadata010(self, p):
-        """ metadata010  : METADATA010
+        """ metadata010  : LT metadata_assignment_list GT
         """
-        meta = c_ast.Metadata010(p[1])
-
+        meta = c_ast.Metadata010(p[2])
         p[0] = meta
+
+    def p_metadata_assignment_list_1(self, p):
+        """ metadata_assignment_list  : metadata_assignment
+                                      | metadata_assignment_list COMMA
+                                      | metadata_assignment_list COMMA metadata_assignment
+        """
+        if isinstance(p[1], list) and isinstance(p[1][0], list) and len(p[1]) == 1:
+            res = p[1]
+            vals = p[3:]
+        else:
+            res = []
+            vals = p[1:]
+
+        while len(vals) > 0:
+            res.append(vals[0])
+            vals = vals[2:]
+
+        p[0] = res
+
+    def p_metadata_assignment(self, p):
+        """ metadata_assignment  : ID EQUALS constant
+                                 | ID EQUALS STRING_LITERAL
+        """
+        p[0] = [p[1], p[3]]
 
     def p_compound_statement_1(self, p):
         """ compound_statement : brace_open block_item_list_opt brace_close """

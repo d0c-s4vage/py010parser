@@ -112,7 +112,7 @@ def parse_file(filename, use_cpp=True, cpp_path='cpp', cpp_args='',
     )
 
 def parse_string(text, parser=None, filename="<string>", optimize=True, predefine_types=True,
-        use_cpp=True, cpp_path='cpp', cpp_args='', keep_scopes=False):
+        use_cpp=True, cpp_path='cpp', cpp_args='', keep_scopes=False, debuglevel=0):
     
     if use_cpp:
         tempfile_path = ''
@@ -134,5 +134,6 @@ def parse_string(text, parser=None, filename="<string>", optimize=True, predefin
         text,
         filename,
         predefine_types = predefine_types,
-        keep_scopes     = keep_scopes
+        keep_scopes     = keep_scopes,
+        debuglevel      = debuglevel,
     )

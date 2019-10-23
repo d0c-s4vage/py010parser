@@ -219,7 +219,7 @@ class CLexer(object):
         'PPHASH',      # '#'
 
         # 010-metadata
-        'METADATA010',
+        #'METADATA010',
     )
 
     ##
@@ -236,6 +236,20 @@ class CLexer(object):
     #    typedef ushort FIXEDPT <read=FIXEDPTRead, write=FIXEDPTWrite>;
     # etc.
     #metadata010 = r'<((\w+)=([^\s]+))(,\s*((\w+)=([^\s]+)))*>'
+
+    # Official reference:
+    # https://www.sweetscape.com/010editor/manual/TemplateVariables.htm
+    #
+    #     < format=hex|decimal|octal|binary,
+    #       fgcolor=<color>,
+    #       bgcolor=<color>,
+    #       comment="<string>"|<function_name>,
+    #       name="<string>"|<function_name>,
+    #       open=true|false|suppress,
+    #       hidden=true|false,
+    #       read=<function_name>,
+    #       write=<function_name>
+    #       size=<number>|<function_name> >
     metadata010 = r'<((\w+)=(.*?))(,(\w+)\s*=(.*))*>'
     
     hex_prefix = '0[xX]'
@@ -530,19 +544,19 @@ class CLexer(object):
             t.type = "TYPEID"
         return t
 
-    @TOKEN(metadata010)
-    def t_METADATA010(self, t):
-        match = re.match(self.metadata010, t.value)
-        kvs = {}
-
-         # split into groups of three
-        #for full,k,v in zip(*(iter(match.groups()),) * 3):
-            #if full is not None:
-                #kvs[k] = v
+#    @TOKEN(metadata010)
+#    def t_METADATA010(self, t):
+#        match = re.match(self.metadata010, t.value)
+#        kvs = {}
 #
-        #t.keyvals = kvs
-
-        return t
+#         # split into groups of three
+#        #for full,k,v in zip(*(iter(match.groups()),) * 3):
+#            #if full is not None:
+#                #kvs[k] = v
+##
+#        #t.keyvals = kvs
+#
+#        return t
 
     def t_error(self, t):
         msg = 'Illegal character %s' % repr(t.value[0])
