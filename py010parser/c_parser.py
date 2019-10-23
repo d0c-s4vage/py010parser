@@ -864,9 +864,14 @@ class CParser(PLYParser):
                             | enum_specifier
                             | struct_or_union_specifier
         """
-        if isinstance(p[1], c_ast.IdentifierType) and \
-                p[1].names[0] in self._structs_with_params and\
-                self._get_yacc_lookahead_token().type == "ID":
+        if (
+                (isinstance(p[1], c_ast.IdentifierType)
+                and p[1].names[0] in self._structs_with_params
+                and self._get_yacc_lookahead_token().type == "ID")
+            or
+                (isinstance(p[1], c_ast.Struct)
+                and p[1].name in self._structs_with_params)
+        ):
             self.clex.insert_token("STRUCT_CALL")
                 
         p[0] = p[1]

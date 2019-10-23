@@ -446,20 +446,6 @@ class For(Node):
 
     attr_names = ()
 
-class StructCall(Node):
-    def __init__(self, name, args, coord=None):
-        self.name = name
-        self.args = args
-        self.coord = coord
-
-    def children(self):
-        nodelist = []
-        if self.name is not None: nodelist.append(("name", self.name))
-        if self.args is not None: nodelist.append(("args", self.args))
-        return tuple(nodelist)
-
-    attr_names = ()
-
 class FuncCall(Node):
     def __init__(self, name, args, coord=None):
         self.name = name
