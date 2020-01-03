@@ -20,9 +20,9 @@ class CParser(PLYParser):
     def __init__(
             self,
             lex_optimize=True,
-            lextab='py010parser.lextab',
+            lextab='lextab',
             yacc_optimize=True,
-            yacctab='py010parser.yacctab',
+            yacctab='yacctab',
             yacc_debug=False):
         """ Create a new CParser.
 
@@ -91,7 +91,7 @@ class CParser(PLYParser):
             'type_qualifier_list',
             'struct_declarator_list',
             'metadata010',
-            'enum_type'
+            'enum_type',
         ]
 
         for rule in rules_with_opt:
@@ -124,6 +124,8 @@ class CParser(PLYParser):
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
+
+        self._in_typedef = False
 
         # Since 010 allows statements inside of a struct,
         # I can't think of an easy way besides duplicating an
@@ -570,7 +572,15 @@ class CParser(PLYParser):
 
             declarations.append(fixed_decl)
 
-        if is_typedef and isinstance(spec["type"][0], c_ast.Struct) and spec["type"][0].args is not None:
+        if (
+                is_typedef
+                and isinstance(spec["type"][0], c_ast.Struct)
+                and (
+                    spec["type"][0].args is not None
+                    or
+                    spec["type"][0].name in self._structs_with_params
+                )
+            ):
             decld_name = declarations[0].type.declname
             self._structs_with_params[decld_name] = True
 
@@ -646,6 +656,7 @@ class CParser(PLYParser):
                                 | declaration
                                 | external_declaration
         """
+        self._in_typedef = False;
         p[0] = p[1] if isinstance(p[1], list) else [p[1]]
 
     # Declarations always come as lists (because they can be
@@ -835,6 +846,8 @@ class CParser(PLYParser):
         """ storage_class_specifier : AUTO
                                     | TYPEDEF
         """
+        if p[1] == "typedef":
+            self._in_typedef = True
         p[0] = p[1]
 
     def p_function_specifier(self, p):
@@ -864,13 +877,14 @@ class CParser(PLYParser):
                             | enum_specifier
                             | struct_or_union_specifier
         """
-        if (
+        if not self._in_typedef and (
                 (isinstance(p[1], c_ast.IdentifierType)
                 and p[1].names[0] in self._structs_with_params
                 and self._get_yacc_lookahead_token().type == "ID")
             or
                 (isinstance(p[1], c_ast.Struct)
-                and p[1].name in self._structs_with_params)
+                and p[1].name in self._structs_with_params
+                and self._get_yacc_lookahead_token().type == "ID")
         ):
             self.clex.insert_token("STRUCT_CALL")
                 
@@ -1006,6 +1020,7 @@ class CParser(PLYParser):
             coord=self._coord(p.lineno(2)),
             args=p[3]
         )
+
         self._struct_level -= 1
 
     def p_struct_or_union(self, p):
@@ -1246,7 +1261,7 @@ class CParser(PLYParser):
 
     def p_direct_declarator_3(self, p):
         """ direct_declarator   : direct_declarator LBRACKET type_qualifier_list_opt assignment_expression_opt RBRACKET
-       """
+        """
         # Accept dimension qualifiers
         # Per C99 6.7.5.3 p7
         arr = c_ast.ArrayDecl(

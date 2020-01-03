@@ -75,6 +75,19 @@ class TestStruct(unittest.TestCase):
         self.assertEqual(decl_args[0][1].value, "1")
         self.assertEqual(len(decl_args), 1)
 
+    def test_basic_struct_call_png(self):
+        res = parse_string("""
+            typedef struct {
+                byte btRed <format=hex>;
+                byte btGreen <format=hex>;
+                byte btBlue <format=hex>;
+            } PNG_PALETTE_PIXEL;
+
+            struct PNG_CHUNK_PLTE (int32 chunkLen) {
+                PNG_PALETTE_PIXEL plteChunkData[chunkLen/3];
+            };
+        """, optimize=True, predefine_types=True)
+
     def test_basic_struct_with_args_calling(self):
         res = parse_string("""
             typedef struct (int a) {
@@ -288,6 +301,21 @@ class TestStruct(unittest.TestCase):
 
             blah some_union;
         """, optimize=True)
+
+    # see #31 - Failure parsing direct struct decls with parameters
+    def test_typedefd_struct_with_parameters(self):
+        """Test that direct struct declarations work with parameters.
+        """
+        res = parse_string("""
+            struct TEST_STRUCT(int arraySize, int arraySize2)
+            {
+                uchar b[arraySize];
+                uchar c[arraySize2];
+            };
+            local int bytes = 4;
+            typedef struct TEST_STRUCT NEW_STRUCT;
+            NEW_STRUCT l(bytes, 3);
+        """, optimize=False)
 
 
 if __name__ == "__main__":
