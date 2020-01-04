@@ -105,6 +105,17 @@ class TestStruct(unittest.TestCase):
         decl_args = decl.type.args.children()
         self.assertEqual(decl_args[0][1].value, "10")
         self.assertEqual(len(decl_args), 1)
+
+    def test_basic_struct_with_args_calling_non_simple_params(self):
+        res = parse_string("""
+struct PNG_CHUNK_BKGD (int32 colorType) {
+};
+
+int blah[4];
+typedef struct {
+    PNG_CHUNK_BKGD bkgd(blah[1]);
+} PNG_CHUNK;
+        """, optimize=True, predefine_types=True)
     
     def test_struct_with_args_calling_not_func_decl(self):
         res = parse_string("""
