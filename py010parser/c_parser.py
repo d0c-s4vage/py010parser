@@ -125,7 +125,7 @@ class CParser(PLYParser):
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
 
-        self._in_typedef = False
+        self._in_typedef_stack = [False]
 
         # Since 010 allows statements inside of a struct,
         # I can't think of an easy way besides duplicating an
@@ -265,10 +265,12 @@ class CParser(PLYParser):
         )
 
     def _push_scope(self):
+        self._in_typedef_stack.append(False)
         self._scope_stack.append(dict())
 
     def _pop_scope(self):
         assert len(self._scope_stack) > 1
+        self._in_typedef_stack.pop()
         self._scope_stack.pop()
 
     def _add_typedef_name(self, name, coord):
@@ -656,7 +658,7 @@ class CParser(PLYParser):
                                 | declaration
                                 | external_declaration
         """
-        self._in_typedef = False;
+        self._in_typedef_stack[-1] = False
         p[0] = p[1] if isinstance(p[1], list) else [p[1]]
 
     # Declarations always come as lists (because they can be
@@ -847,7 +849,7 @@ class CParser(PLYParser):
                                     | TYPEDEF
         """
         if p[1] == "typedef":
-            self._in_typedef = True
+            self._in_typedef_stack[-1] = True
         p[0] = p[1]
 
     def p_function_specifier(self, p):
@@ -877,7 +879,7 @@ class CParser(PLYParser):
                             | enum_specifier
                             | struct_or_union_specifier
         """
-        if not self._in_typedef and (
+        if not self._in_typedef_stack[-1] and (
                 (isinstance(p[1], c_ast.IdentifierType)
                 and p[1].names[0] in self._structs_with_params
                 and self._get_yacc_lookahead_token().type == "ID")
